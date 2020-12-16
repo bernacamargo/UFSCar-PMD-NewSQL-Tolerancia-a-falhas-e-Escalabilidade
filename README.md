@@ -20,9 +20,20 @@
 
 ## Escalabilidade 
 
-  O NewSQL possui uma escalabilidade horizontal  que proporciona um aumento de execução e processamentos de tarefas, para isso ele adiciona  mais servidores para dividir o trabalho, muito indicado para sistemas distribuídos e sistemas que se utilizam de BigData para o processamento. 
+	O NewSQL possui uma escalabilidade horizontal  que proporciona um aumento de execução e processamentos de tarefas, para isso ele adiciona  mais servidores para dividir o trabalho, muito indicado para sistemas distribuídos e sistemas que se utilizam de BigData para o processamento. 
 	Como podemos observar na figura 1, diferente da escalabilidade vertical, que possuo um servidor principal que recebe o principal fluxo de dados e tarefas e possui outros processadores de menor potência para ajudar nesse processamento, o recurso horizontal, permite o volume de dados sejam divididos em pequenas porções para que sejam processados em muito servidores, porém essa forma de organização demanda uma competência técnica para que seja benéfica para a aplicação.
 
+![Figura 2 Fonte: Lima (2018)](https://lh5.googleusercontent.com/dkUgHngtKbvi89NcK3u3-0OJkNh7qs83y_urflh7xR1IwCrNJNEiGZAssfk8FlhYVumCvH7c8z4yYnA5ecl1cpqovm26evbMOg68iAtmSpwTAmfJsIDuli-Lm0006GaFwSPvqQTB)
+
+##Softwares que serão utilizados
+	Para o tutorial decidimos utilizar dois software que foram muito citados nas nossas pesquisas iniciais e que tinham possibilidades de se utilizar de maneira gratuita para realizar os exemplos a seguir, neste tópico iremos abordar os softwares suas principais características, onde são mais utilizados, suas estruturas e qual exemplo utilizaremos.
+
+###MemSQL
+
+	O MemSQL é um sistema de armazenamento de dados distribuído, que permite querys simultâneas sem limites em um mesmo ecossistema e além de possuir as características escaláveis de um noSQL também aceita estruturas de dados relacionais utilizando SQL. 
+	Uma das características mais interessantes deste sistema é que ele também utiliza a memória RAM para armazenar seus dados, facilitando o acesso à informação e tornando esse processo extremamente ágil. Contudo sempre é armazenado uma cópia do dado em disco por segurança.
+
+![Figura 3 - Visão geral do MemSQL. Fonte: Shekhargulati(2019)](https://lh4.googleusercontent.com/4MGOTM9ZS7pcZy3nEqjjaodJ4wZOM80xnTQo9sjFdNv8N_foz5ZYONN_0TN0zfzHIvOmzSBBRa4_l-tjY3USY9HIuYL4ITlrwbgVafgYGnSSbfp2r3fyDY3-KSv8qdypaFpl1rdQ)
 
 ## CockroachDB
 
