@@ -42,15 +42,22 @@ Antes de iniciar o teste para identificar como é realizado a tolerância a falh
 > O operator,  será responsável por manter a operação do cockroachdb dentro do nosso cluster, assim toda vez que a gente for iniciar o nó (pods), ele irá instalar tudo que é necessário dentro deste nó (pods)  
 
   1. Estartar o minikube no seu Cluster
-    >minikube start
+  
+    > minikube start
   2. Aplicar o CustomResourceDefinition (CRD) do Operator(operador)
-    >kubectl apply -f https://raw.githubusercontent.com/cockroachdb/cockroach-operator/master/config/crd/bases/crdb.cockroachlabs.com_crdbclusters.yaml
+  
+    > kubectl apply -f https://raw.githubusercontent.com/cockroachdb/cockroach-operator/master/config/crd/bases/crdb.cockroachlabs.com_crdbclusters.yaml
   3. Aplicar o Operator manifest
-    >kubectl apply -f https://raw.githubusercontent.com/cockroachdb/cockroach-operator/master/manifests/operator.yaml
+  
+    > kubectl apply -f https://raw.githubusercontent.com/cockroachdb/cockroach-operator/master/manifests/operator.yaml
+    
   4. Validar se o Operator está rodando
-    >kubectl get pods
+  
+    > kubectl get pods
+    
   Ele deverá responder como o exemplo abaixo:
-      clusterrole.rbac.authorization.k8s.io/cockroach-operator-role created
+  
+     clusterrole.rbac.authorization.k8s.io/cockroach-operator-role created
   serviceaccount/cockroach-operator-default created
   clusterrolebinding.rbac.authorization.k8s.io/cockroach-operator-default created
   deployment.apps/cockroach-operator created
@@ -59,18 +66,22 @@ Antes de iniciar o teste para identificar como é realizado a tolerância a falh
   - Agora vamos partir para configuração em si do cluster.
   
   1. Realize o download e a edição do arquivo exemple.yaml, ele vai informar as configurações que o opertator deve ter para a configuração do nosso cluster.
+  
   > curl -O https://raw.githubusercontent.com/cockroachdb/cockroach-operator/master/examples/example.yaml
   > vi example.yaml
   
   2. Neste passo vamos configurar nossa CPU e memoria para cada pod(nó) do nosso cluster. Neste caso, vamos utilizar o mímimo de configuração que é possível para atingir nosso objetivo de teste.
+  
   >  resources:
-    requests:
-      cpu: "2"
-      memory: "8Gi"
-    limits:
-      cpu: "2"
-      memory: "8Gi"
+     requests:
+        cpu: "2"
+        memory: "8Gi"
+      limits:
+        cpu: "2"
+        memory: "8Gi"
+      
    3. Modifique o resources.requests.storage
+   
    > resources:
     requests:
     storage: "1Gi"
