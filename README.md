@@ -67,24 +67,32 @@ Antes de iniciar o teste para identificar como é realizado a tolerância a falh
   
   1. Realize o download e a edição do arquivo exemple.yaml, ele vai informar as configurações que o opertator deve ter para a configuração do nosso cluster.
   
-  > curl -O https://raw.githubusercontent.com/cockroachdb/cockroach-operator/master/examples/example.yaml
-  > vi example.yaml
+     curl -O https://raw.githubusercontent.com/cockroachdb/cockroach-operator/master/examples/example.yaml
+     
+     vi example.yaml
   
   2. Neste passo vamos configurar nossa CPU e memoria para cada pod(nó) do nosso cluster. Neste caso, vamos utilizar o mímimo de configuração que é possível para atingir nosso objetivo de teste.
   
-  >  resources:
+    resources:
+ 
      requests:
+     
         cpu: "2"
         memory: "8Gi"
+        
       limits:
+      
         cpu: "2"
+        
         memory: "8Gi"
       
    3. Modifique o resources.requests.storage
    
-   > resources:
-    requests:
-    storage: "1Gi"
+     resources:
+
+     requests:
+
+     storage: "1Gi"
    
     Obs: caso você queira outra configuração para outro teste ou projeto, se atente de verificar as configurações necessárias disponibilizadas [aqui](https://www.cockroachlabs.com/docs/v20.2/recommended-production-settings#hardware)
 
