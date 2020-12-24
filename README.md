@@ -77,7 +77,7 @@ O retorno esperado é:
 
 > Nota: Caso o status da pod estiver como "ContainerCreating" é só aguardar alguns instantes que o kubernetes esta iniciando o container e logo deverá aparecer como "Running".
 
-  #### 2. Configuração em si do cluster.
+  #### 2. Configuração do cluster cockroachdb.
   
   2.1. Realize o download e a edição do arquivo `example.yaml`, este é responsável por realizar a configuração do cluster Kubernetes.
   
@@ -132,11 +132,55 @@ O retorno esperado é:
     cockroachdb-2                         1/1     Running   0          67sa
     
 
-#### 3. Popular nossa base de dados.
+#### 3. Executando comandos SQL na pod.
+
 Após o sucesso das operações acima, vamos popular a nossa base de dados, para isso utilizamos um arquivo csv disponibilizado no git do [@tmcnab](https://github.com/tmcnab/northwind-mongo/blob/master/employees.csv).
 
-3.1. 
+3.1. Acesse uma das pods e inicialize o [build-in SQL client](https://www.cockroachlabs.com/docs/v20.2/cockroach-sql)
+
+    $ kubectl exec -it cockroachdb-2 -- ./cockroach sql --certs-dir cockroach-certs
+
+> Nota: Para alterar qual pod voce está acessando basta alterar a parte do comando que contém `cockroachdb-2` para o que você desejar.
+
+Após a execução deste comando estaremos acessando o bash do build-in SQL client da pod escolhida
+
+    #
+    # Welcome to the CockroachDB SQL shell.
+    # All statements must be terminated by a semicolon.
+    # To exit, type: \q.
+    #
+    # Server version: CockroachDB CCL v20.2.0 (x86_64-unknown-linux-gnu,
+    built 2020/11/09 16:01:45, go1.13.14) (same version as client)
+    # Cluster ID: ff66ae62-8a67-4e24-a636-ce5f5fd2607d
+    #
+    root@:26257/defaultdb>
 
 
+3.2. Popular nossa base de dados
+
+    IMPORT TABLE employes (
+        EmployeeID UUID PRIMARY KEY,
+        LastName TEXT,
+        FirstName TEXT,
+        Title TEXT,
+        TitleOfCourtesy TEXT,
+        BirthDate TEXT,
+        HireDate TEXT,
+        Address TEXT,
+        City TEXT,
+        Region TEXT,
+        PostalCode TEXT,
+        Country TEXT,
+        HomePhone TEXT,
+        Extension TEXT,
+        Photo TEXT,
+        Notes TEXT,
+        ReportsTo TEXT,
+        PhotoPath TEXT
+    )
+    CSV DATA ('https://raw.githubusercontent.com/tmcnab/northwind-mongo/master/employees.csv')
+    WITH
+        nullif = ''
+    ;
 
 ### MemSQL
