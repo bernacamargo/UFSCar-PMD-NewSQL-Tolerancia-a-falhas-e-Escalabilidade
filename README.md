@@ -4,6 +4,8 @@
 - Bernardo Pinheiro Camargo [@bernacamargo](https://github.com/bernacamargo)
 - Renata Praisler [@RenataPraisler](https://github.com/RenataPraisler)
 
+# 
+
 ### Objetivos
 No contexto de bancos de dados relacionais e distribuídos (NewSQL), temos como objetivo deste projeto planejar e elaborar um tutorial intuitivo que permita a qualquer pessoa interessada testar e validar as características relacionadas a tolerância às falhas e escalabilidade na estrutura de NewSQL.
 
@@ -98,7 +100,7 @@ Utilize o `vim`(ou qualquer editor de texto de sua preferência) para abrir o ar
 
 > Nota: Caso não seja definido valores iniciais a aplicação poderá utilizar totalmente os recursos disponibilizados pelo host e ocasionar cobranças indesejadas.
         
-   3.3. Modifique o resources.requests.storage
+   2.3. Modifique o resources.requests.storage
    
      resources:
         requests:
@@ -107,7 +109,7 @@ Utilize o `vim`(ou qualquer editor de texto de sua preferência) para abrir o ar
 > Nota: caso você queira outra configuração para outro teste ou projeto, se atente de verificar as configurações necessárias disponibilizadas [aqui](https://www.cockroachlabs.com/docs/v20.2/recommended-production-settings#hardware)
 
 
-3.4. Aplique as configurações feitas no arquivo `example.yaml`.
+2.4. Aplique as configurações feitas no arquivo `example.yaml`.
 
     $ kubectl apply -f example.yaml
 
@@ -117,7 +119,7 @@ O retorno esperado é:
 
 > Nota: Este arquivo irá solicitar para o Operador que crie uma aplicação StatefulSet com três pods que funcionarão como um cluster cockroachdb.
 
-3.5. Verifique se as pods subiram.
+2.5. Verifique se as pods subiram.
 
     $ kubectl get pods
 
@@ -127,6 +129,14 @@ O retorno esperado é:
     cockroach-operator-6867445556-9x6zp   1/1     Running   0          43m
     cockroachdb-0                         1/1     Running   0          2m29s
     cockroachdb-1                         1/1     Running   0          104s
-    cockroachdb-2                         1/1     Running   0          67s
+    cockroachdb-2                         1/1     Running   0          67sa
+    
+
+#### 3. Popular nossa base de dados.
+Após o sucesso das operações acima, vamos popular a nossa base de dados, para isso utilizamos um arquivo csv disponibilizado no git do [@tmcnab](https://github.com/tmcnab/northwind-mongo/blob/master/employees.csv).
+
+3.1. 
+
+
 
 ### MemSQL
