@@ -43,11 +43,16 @@ Feito isso, um cluster com três nós será criado e inicializado. Em alguns mom
 
 Antes de iniciar o teste para identificar como é realizado a tolerância a falhas e a escalabilidade, temos que configurar o Cockroachdb no nosso cluster, para nos auxiliar utilizamos as documentações do Cockroachdb e kubernetes, e citaremos abaixo os comandos que devem ser realizados.
 
-#### 1. Iniciar o Operator do nosso cluster.
+Para configurar a aplicação do cockroachdb dentro do cluster podemos fazer de algumas formas:
+- [Usando o Operator](https://kubernetes.io/pt/docs/concepts/extend-kubernetes/operator/)
+- [Usando o Helm](https://helm.sh/)
+- Usando arquivos de configurações sem ferramentas automatizadoras.
 
-> Nota: O operator,  será responsável por manter a operação do cockroachdb dentro do nosso cluster, assim toda vez que a gente for iniciar o nó (pods), ele irá instalar tudo que é necessário dentro deste nó (pods)  
+Neste exemplo utilizaremos o Operator fornecido pelo Cockroachdb, iremos automatizar a configuração da aplicação e assim não teremos que perde tempo com alguns detalhes mais técnicos.
 
-  1.1. Aplicar o CustomResourceDefinition (CRD) do Operator(operador)
+#### 1. Instalar o Operator no cluster.
+
+  1.1. Criar o CustomResourceDefinition (CRD) para o Operator
   
     $ kubectl apply -f https://raw.githubusercontent.com/cockroachdb/cockroach-operator/master/config/crd/bases/crdb.cockroachlabs.com_crdbclusters.yaml
 
@@ -55,7 +60,9 @@ O retorno esperado é:
 
     customresourcedefinition.apiextensions.k8s.io/crdbclusters.crdb.cockroachlabs.com created
 
-  1.2. Aplicar o Operator manifest
+> Nota: É interessante notar que o operator irá ser executado como uma pod do cluster.
+
+  1.2. Criar o Controller do Operator
   
     $ kubectl apply -f https://raw.githubusercontent.com/cockroachdb/cockroach-operator/master/manifests/operator.yaml
     
