@@ -190,38 +190,42 @@ root@:26257/defaultdb>
 
 A partir deste momento, já é possível executar comandos SQL diretamente em nossas aplicações do cockroachdb.
 
-3.3 Crie a sua DATABASE.
-```
-CREATE DATABASE viloes; 
+3.2. Crie a sua DATABASE.
+
+```sql
+CREATE DATABASE viloes
 ```
 
-3.2. Popular nossa base de dados
+3.3. Popular nossa base de dados
 
 Agora vamos popular a nossa base antes de iniciar os testes, através do arquivo [employees.csv](https://github.com/tmcnab/northwind-mongo/blob/master/employees.csv), disponibilizado no GitHub [@tmcnab/northwind-mongo](https://github.com/tmcnab/northwind-mongo/).
+
+
 ```sql
-IMPORT TABLE employes (
-    EmployeeID UUID PRIMARY KEY,
-    LastName TEXT,
-    FirstName TEXT,
-    Title TEXT,
-    TitleOfCourtesy TEXT,
-    BirthDate TEXT,
-    HireDate TEXT,
-    Address TEXT,
-    City TEXT,
-    Region TEXT,
-    PostalCode TEXT,
-    Country TEXT,
-    HomePhone TEXT,
-    Extension TEXT,
-    Photo TEXT,
-    Notes TEXT,
-    ReportsTo TEXT,
-    PhotoPath TEXT
+IMPORT TABLE viloes.marvel (
+    URL STRING,
+    Name_Alias STRING,
+    Appearances STRING,
+    Current STRING,
+    Gender STRING,
+    Probationary STRING,
+    Full_Reserve STRING,
+    Years STRING,
+    Years_since_joining STRING,
+    Honorary STRING,
+    Death1 STRING,
+    Return1 STRING,
+    Death2 STRING,
+    Return2 STRING,
+    Death3 STRING,
+    Return3 STRING,
+    Death4 STRING,
+    Return4 STRING,
+    Death5 STRING,
+    Return5 STRING,
+    Notes STRING
 )
-CSV DATA ('https://raw.githubusercontent.com/tmcnab/northwind-mongo/master/employees.csv')
-WITH
-    nullif = ''
+CSV DATA ("https://raw.githubusercontent.com/bernacamargo/PMD-tutorial/using-gcloud/avengers.csv")
 ;
 ```
 
@@ -235,18 +239,18 @@ SELECT * FROM viloes.marvel;
 
 4.1 Tolerância à falhas 
     
-A tolerância à falhas tem como objetivo impedir que alguma mudança da nossa base de dados seja perdida por conta de algum problema, com isso é realizado o método de replicação para que todos os nós tenham as mudanças realizadas, e assim caso um nó tenha algum problema, o outro nó do sistema terá as informações verdadeiras. Sabendo disso, vamos simular alguns casos para você perceber o este funcionamento. 
+A tolerância à falhas tem como objetivo impedir que alguma mudança da nossa base de dados seja perdida por conta de algum problema, com isso é realizado o método de replicação para que todos os nós tenham as mudanças realizadas, e assim caso um nó tenha algum problema, o outro nó do sistema terá as informações consistentes. Sabendo disso, vamos simular alguns casos para você perceber o este funcionamento. 
 Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na prática, para isso vamos efeturar uma operação de atualização(UPDATE) em um nó e verificar o que acontece com os outros nós. 
 
     Nota: Acesse o bash de uma das pods que estão rodando a aplicação e Dentro da pod inicialize o [build-in SQL client](https://www.cockroachlabs.com/docs/v20.2/cockroach-sql) do cockroach como explicado no item 3. Executando comandos SQL na pod.
   
 Rode o comando abaixo para realizar a alteração no nó 2. 
- ```
+ ```sql
  INSERIR A LINHA DE UPDATE CONFORME A NOSSA BASE DE DADOS
   ```
 E agora acesse o nó 1 e rode o comando:
 
- ```
+ ```sql
  SELECT * FROM BASE where
   ```
 Como podemos ver, o nosso dado foi atualizado no nó1 e está igual a base do nó-2, verifique se os outros nós estão iguais também, então a replicação ocorreu.
