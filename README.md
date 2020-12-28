@@ -251,17 +251,23 @@ E agora acesse o nó 1 e rode o comando:
   ```
 Como podemos ver, o nosso dado foi atualizado no nó1 e está igual a base do nó-2, verifique se os outros nós estão iguais também, então a replicação ocorreu.
 
-   4.1.1 Derrubar um nó. 
-        Vamos deletar(terminate) um nó utilizando o comando abaixo:
+   4.1.1 Sumular nó falhado.
+   
+   Vamos deletar(terminate) um nó utilizando o comando abaixo:
+   
         ```shell
         kubectl delete pod cockroachdb-2
         ```
-        Você terá o retorno que o nó foi deletado.  
+        
+   Você terá o retorno que o nó foi deletado.  
+   
         ```
         pod "cockroachdb-2" deleted
         ```
-        O que é interessante, é que no nosso example.yaml, nos informamos que os nós são 3, e o quando demos o delete no nó 2, o Kubernets verifica que o nó 2 teve uma falha,e ele reinicia automaticamente o nó e recupera os dados baseados nos outros nós.
+   
+   O que é interessante, é que no nosso example.yaml, nos informamos que os nós são 3, e o quando demos o delete no nó 2, o Kubernets verifica que o nó 2 teve uma falha,e ele reinicia automaticamente o nó e recupera os dados baseados nos outros nós.
         Rodando esse comando no terminal, verificamos que o nó já esta rodando. 
+        
         ```
         kubectl get pod cockroachdb-2
         
@@ -273,11 +279,24 @@ Como podemos ver, o nosso dado foi atualizado no nó1 e está igual a base do n�
          ```
         INSERIR A LINHA DE UPDATE CONFORME A NOSSA BASE DE DADOS
          ```
-    E agora acesse o nó 1 e rode o comando:
+   E agora acesse o nó 1 e rode o comando:
 
          ```
          SELECT * FROM 
          ```
      ** mostrar que a base de dados esta ok, como estava antes de deletar o nó **
+  
+  4.1.2 Remover um nó
+    
+    
+    ```
+    kubectl exec -it cockroachdb-2 \
+    -- ./cockroach node decommission \
+    --self \
+    --certs-dir cockroach-certs \
+    ```
+4.2 Escalabilidade
+
+
      
 ### MemSQL
