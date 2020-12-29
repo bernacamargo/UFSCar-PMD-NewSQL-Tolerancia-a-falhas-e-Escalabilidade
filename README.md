@@ -80,7 +80,7 @@ O retorno esperado é:
     clusterrolebinding.rbac.authorization.k8s.io/cockroach-operator-default created
     deployment.apps/cockroach-operator created
 
-1.3. Validar se o Operator está rodando
+1.3. Validar se o Operator está executando
 
 ```shell
 $ kubectl get pods
@@ -100,7 +100,7 @@ Caso tenha funcionado, você deverá ter como retorno a seguinte mensagem:
 $ curl -O https://raw.githubusercontent.com/cockroachdb/cockroach-operator/master/examples/example.yaml
 ```
 
-Utilize o `vim`(ou qualquer editor de texto de sua preferência) para abrir o arquivo baixado no passo anterior.
+Utilize o `vim`(ou qualquer editor de texto de sua preferência) para abrir o arquivo baixado na etapa anterior.
 
 ```shell
 $ vim example.yaml
@@ -144,7 +144,7 @@ O retorno esperado é:
 
 > Nota: Este arquivo irá solicitar para o Operador que crie uma aplicação StatefulSet com três pods que funcionarão como um cluster cockroachdb.
 
-2.5. Verifique se as pods subiram.
+2.5. Aguarde alguns minutos e verifique se as pods estão sendo executadas.
 
 ```shell
 $ kubectl get pods
@@ -195,7 +195,7 @@ A partir deste momento, já é possível executar comandos SQL diretamente em no
 #### 3.3. Crie o banco de dados.
 
 ```sql
-CREATE DATABASE commic_book
+CREATE DATABASE commic_book;
 ```
 
 #### 3.4. Popular a base de dados
@@ -230,7 +230,7 @@ CSV DATA ("https://raw.githubusercontent.com/bernacamargo/PMD-tutorial/using-gcl
 ;
 ```
 
-Caso o importe não encontre nenhum problema o retorno esperado deve ser:
+Caso a importação não encontre nenhum problema, o retorno esperado deve ser:
 
             job_id       |  status   | fraction_completed | rows | index_entries | bytes
     ---------------------+-----------+--------------------+------+---------------+--------
@@ -247,21 +247,16 @@ SELECT * FROM commic_book.marvel;
 ```
 
 #
-### 4. Testes 
+### 4. Testes de tolerância a falhas
 
->Nota: É importante ressaltar que temos um cluster kubernetes, composto de três instâncias de máquina virtual (1 master e 2 workers), onde as pods são alocadas e cada pod representa um nó do CockroachDB que está executando. Dessa forma quando falamos sobre os nós do cockroachdb estamos nos referindo as pods e quando falamos dos nós do cluster estamos falando das instâncias de máquina virtual do Kubernetes.
-
-
-#### 4.1 Tolerância à falhas 
+>Nota: É importante ressaltar que temos um cluster kubernetes, composto de três instâncias de máquinas virtuais (3 workers), onde as pods são executadas e cada pod representa um nó do CockroachDB. Dessa forma quando falamos sobre os nós do cockroachdb estamos nos referindo as pods e quando falamos dos nós do cluster estamos nos referindo as instâncias de máquina virtual do Kubernetes.
     
 A tolerância à falhas tem como objetivo impedir que alguma mudança da nossa base de dados seja perdida por conta de algum problema, com isso é realizado o método de replicação para que todos os nós tenham as mudanças realizadas, e assim caso um nó tenha algum problema, o outro nó do sistema terá as informações consistentes. 
 
 Sabendo disso, vamos simular alguns casos para você perceber o este funcionamento. 
 Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na prática, para isso vamos efeturar uma operação de atualização(UPDATE) em um nó e verificar o que acontece com os outros nós. 
 
-<!-- >Nota: Acesse o bash de uma das pods que estão rodando a aplicação e Dentro da pod inicialize o [build-in SQL client](https://www.cockroachlabs.com/docs/v20.2/cockroach-sql) do cockroach como explicado no item 3. Executando comandos SQL na pod. -->
-
-##### 4.1.1. Replicação de dados
+#### 4.1. Replicação de dados
 
 Primeiramente vamos verificar como está o dado que desejamos modificar, execute o seguinte comando SQL para busca-lo na tabela `marvel`.
 
@@ -282,19 +277,19 @@ O retorno esperado é:
 Execute o comando abaixo para realizar a alteração no nó 2. 
 
 ```sql
-UPDATE commic_book.marvel SET name_alias = ('Homem de ferro') WHERE  url='http://marvel.wikia.com/Anthony_Stark_(Earth-616)';
+UPDATE commic_book.marvel SET name_alias = 'Homem de ferro' WHERE  url='http://marvel.wikia.com/Anthony_Stark_(Earth-616)';
 ```
 
-E agora acesse o nó 1 e execute a consulta novamente
+E agora acesse o nó 1, repetindo os passos da etapa [3](https://github.com/bernacamargo/PMD-tutorial#3-executando-comandos-sql-na-pod), e após entrar no build-in SQL, execute a consulta abaixo
 
 ```sql
 SELECT url, name_alias FROM commic_book.marvel WHERE url='http://marvel.wikia.com/Anthony_Stark_(Earth-616)';
 ```
 Como podemos observar, a atualização foi realizada e também foi replicada para as outras pods. Dessa forma podemos realizar este mesmo teste com as outras pods e veremos que todas estão sincronizadas.
 
-##### 4.1.2 Simulando a falha de uma pod.
+#### 4.2 Simulando a falha de uma pod.
    
-   Vamos deletar um nó do cockroachdb utilizando o comando abaixo:
+Vamos deletar um nó do cockroachdb utilizando o comando abaixo:
    
 ```shell
 $ kubectl delete pod cockroachdb-2
@@ -304,7 +299,7 @@ Você terá o retorno que o nó foi deletado.
 
     pod "cockroachdb-2" deleted
 
-O que é interessante, é que no nosso example.yaml, informamos que teremos 3 nós, então quando deletamos o nó 2, o Kubernets irá verificar que o nó 2 teve uma falha, e  automaticamente reiciciará o nó e atualizará os dados baseados nos outros nós.
+O que é interessante, é que no arquivo `example.yaml`, definimos que teremos `3 nodes` executando o cockroachdb. Então quando deletamos o nó 2, o Kubernets irá verificar que o nó 2 teve uma falha, e  automaticamente reiciciará a pod e atualizará os dados baseados nos outros nós.
 
 Executando esse comando no terminal, verificamos que a pod já esta ativa novamente. 
         
@@ -315,7 +310,7 @@ $ kubectl get pod cockroachdb-2
     NAME            READY     STATUS    RESTARTS   AGE
     cockroachdb-2   1/1       Running   0          15s
   
-#### 4.2 Escalabilidade
+### 5 Testes de Escalabilidade
 
 > Textinho explicativo da renatinha parsa
 
@@ -325,7 +320,7 @@ $ kubectl get pod cockroachdb-2
 
 >Nota: Vale ressaltar que o cockroachdb precisa de pelo menos 3 nós para funcionar em cloud.
 
-##### 4.2.1. Modificar o número de nós do cockroachdb
+#### 5.1. Modificar o número de nós do cockroachdb
 
 Nesta etapa iremos editar a quantidade de `nodes` que nossa aplicação do cockroachdb irá se sustentar.
 
