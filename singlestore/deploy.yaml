@@ -32,7 +32,7 @@ spec:
           value: 'password'
         # TODO: paste your license key from portal.memsql.com here:
         - name: LICENSE_KEY
-          value: PASTE_YOUR_LICENSE_KEY_HERE
+          value: BDk1N2M0OWRiNzIwMjQ3NTQ4NjNmOTMxZTM2YTc3NWNiAAAAAAAAAAAEAAAAAAAAAAwwNQIYGZA9v4rX3I8F3PFeLuWby9AZLc3OVv6mAhkAxraPYjbt4pe2Erua9H9WnNxicOOt5NO8AA==
 ---
 # A service load-balances across and routes traffic into pods
 apiVersion: v1
