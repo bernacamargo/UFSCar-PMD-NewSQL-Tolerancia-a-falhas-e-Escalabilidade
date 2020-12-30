@@ -323,7 +323,7 @@ Todas essas ações são necessários estudos e estragégias que vão depender d
 
 Nesta etapa iremos editar a quantidade de `nodes` que nossa aplicação do cockroachdb irá se sustentar.
 
-Primeiramente abra o arquivo `example.yaml` com o vim
+Primeiramente abra o arquivo `example.yaml`
 
 ```shell
 $ vim example.yaml
