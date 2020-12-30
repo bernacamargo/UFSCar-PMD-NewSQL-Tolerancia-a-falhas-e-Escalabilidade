@@ -374,4 +374,92 @@ Dessa forma todas as requisições feitas à aplicação serão diluídas em mai
 
 >Nota: Para realizar a redução na quantidade de nós basta refazer o procedimento explicado acima reduzindo o número de nós. 
 
-### MemSQL
+### SingleStore
+
+#### 1. Conceitos básicos
+
+O SingleStore é um software de banco de dados que possui como característica especial o fato de manter seus dados em memória e não em disco como no Cockroachdb.
+
+Dessa forma para conseguirmos executar o SingleStore dentro de um cluster Kubernetes, será necessário realizar o deploy da aplicação e configura-la como quisermos.
+
+#### 2. Fazendo deploy
+
+```yaml
+# A deployment ensures pod(s) are restarted on failure
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: memsql
+spec:
+  replicas: 1 # only create one pod (container)
+  selector:
+    matchLabels:
+      app: memsql
+  template:
+    # Here's the definition of the pod:
+    metadata:
+      # The service finds all pods with matching metadata
+      labels:
+        app: memsql
+    spec:
+      containers:
+      - name: memsql
+        resources:
+        # Cluster-in-a-box image is pulled from Docker Hub 
+        image: memsql/cluster-in-a-box
+        ports:
+        - containerPort: 3306 # MemSQL db
+        - containerPort: 8080 # MemSQL Studio
+        env:
+        # 'Y' means keep running after cluster init
+        - name: START_AFTER_INIT
+          value: 'Y'
+        # TODO: set to your desired password
+        - name: ROOT_PASSWORD
+          value: 'password'
+        # TODO: paste your license key from portal.memsql.com here:
+        - name: LICENSE_KEY
+          value: BDk1N2M0OWRiNzIwMjQ3NTQ4NjNmOTMxZTM2YTc3NWNiAAAAAAAAAAAEAAAAAAAAAAwwNQIYGZA9v4rX3I8F3PFeLuWby9AZLc3OVv6mAhkAxraPYjbt4pe2Erua9H9WnNxicOOt5NO8AA==
+---
+# A service load-balances across and routes traffic into pods
+apiVersion: v1
+kind: Service
+metadata:
+  name: memsql
+  labels:
+    app: memsql
+spec:
+  type: NodePort
+  # Find all pods
+  selector:
+    app: memsql
+  ports:
+  # MemSQL db port:
+  - name: '3306'
+    nodePort: 30306
+    port: 3306
+    targetPort: 3306
+  # MemSQL Studio port:
+  - name: '8080'
+    nodePort: 30080
+    port: 8080
+    targetPort: 8080
+```
+
+> Nota: Definir `ROOT_PASSWORD` e `LICENSE_KEY` com seus valores
+
+```shell
+kubectl apply -f deploy.yaml
+```
+
+#### 3. Liberando as portas dos Nós workers
+
+- Porta do MemSQL DB
+```shell
+gcloud compute firewall-rules create memsql --allow tcp:30306 --project pmd-final
+```
+
+- Porta do MemSQL-Studio
+```shell
+gcloud compute firewall-rules create memsql-studio --allow tcp:30080 --project pmd-final
+```
