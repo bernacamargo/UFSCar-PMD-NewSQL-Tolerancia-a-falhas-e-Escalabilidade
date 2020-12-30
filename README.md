@@ -312,11 +312,11 @@ $ kubectl get pod cockroachdb-2
   
 ### 5 Testes de Escalabilidade
 
-> Textinho explicativo da renatinha parsa
+O NewSQL utiliza a escalabilidade horizontal, que consiste em utilizar mais equipamentos e existe a partionalização dos dados de acordo com os critérios de cada projeto, diferente do vertical, que consiste em aumentar a capacidade da máquina, porém no horizontal também temos o aumento de capacidade de memória e de processamento, mas isso terá o impacto pela soma das máquinas em funcionamento. 
 
-> Scale up = Aumentar numero de pods (escalonamento horizontal)
+Para entender o motivo que precisamos realizar este escalomamento, vamos supor que existe uma necessidade de processamento maior dos dados num período de tempo, como por exemplo a black friday (data em novemembro em que o comércio realiza descontos em cima de produtos), para isso seja necessário um aumento de quantidade de máquina para que não tenha impacto no processamento para o cliente final, mas em outras datas não tenha o mesmo volume de acesso, então podemos reduzir também nossas pods para que tenha uma redução no valor de processamento. 
 
-> Scale down = Diminuir numero de pods (escalonamento horizontal)
+Todas essas ações são necessários estudos e estragégias que vão depender do propósito e abordagem desejada para cada projeto, por isso é importante se aprofundar para analisar os impactos positivos de cada ação, para que isso não atinja o usuário final. 
 
 >Nota: Vale ressaltar que o cockroachdb precisa de pelo menos 3 nós para funcionar em cloud.
 
