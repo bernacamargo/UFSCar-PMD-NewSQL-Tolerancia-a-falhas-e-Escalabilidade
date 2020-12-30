@@ -1,4 +1,4 @@
-# NewSQL - Tolerância à falha e escalabilidade com Cockroachdb e MemSQL
+# NewSQL - Tolerância à falha e escalabilidade com Cockroachdb e SingleStore
 
 #### Autores
 - Bernardo Pinheiro Camargo [@bernacamargo](https://github.com/bernacamargo)
@@ -13,14 +13,13 @@ No contexto de bancos de dados relacionais e distribuídos (NewSQL), temos como 
 
 O NewSQL surgiu como uma nova proposta, pois com o uso do NOSQL acabou apresentando alguns problemas como por exemplo: a falta, do uso de transações, das consultas SQL e a estrutura complexa por não ter uma modelagem estruturada. Ele veio com o objetivo de ter os os pontos positivos dos do modelo relacional para as arquiteturas distribuídas e aumentar o desempenhos das queries de SQL, não tendo a necessidade de servidores mais potentes para melhor execução, e utilizando a escalabilidade horizontal e mantendo as propriedades ACID(Atomicidade, Consistência, Isolamento e Durabilidade).
 
-
-## Tecnologias Habilitadores
+## Tecnologias que vamos utilizar
 
 - Kubernetes;
 - Docker;
 - Google Kubernetes Engine (GKE);
 - Cockroachdb;
-- MemSQL;
+- SingleStore;
 
 ## 
 
@@ -37,8 +36,7 @@ Primeiramente precisamos criar nosso cluster e utilizaremos o GKE para isto:
 
 Feito isso, um cluster com três nós será criado e inicializado. Em alguns momentos você já poderá acessá-lo para seguirmos com as configurações.
 
-
-> Para ambos os softwares Cockroachdb e MemSQL utilizaremos o mesmo processo para inicialização do cluster kubernetes, porém em clusters diferentes.
+> Para ambos os softwares Cockroachdb e SingleStore utilizaremos o mesmo processo para inicialização do cluster kubernetes, porém em clusters diferentes.
 
 ## Cockroachdb
 
@@ -161,7 +159,7 @@ O retorno esperado é:
 
 ### 3. Executando comandos SQL na pod.
 
-Feito isso já temos nosso cluster e nossa aplicação configurados e executando. Agora chegou o momento de realizarmos nossos testes para averiguar a tolerância a falhas e a escalabilidade do CockroachDB.
+Feito isso, já temos nosso cluster e nossa aplicação configurados e executando, temos que popular nosso banco de dados para realizar os testes. 
 
 #### 3.1. Acesse o bash de uma das pods que estão rodando a aplicação
 
@@ -246,6 +244,7 @@ Agora realize um SELECT na tabela para ver seus dados.
 SELECT * FROM commic_book.marvel;
 ```
 
+Agora chegou o momento de realizarmos nossos testes para averiguar a tolerância a falhas e a escalabilidade do CockroachDB.
 #
 ### 4. Testes de tolerância a falhas
 
@@ -301,7 +300,7 @@ Você terá o retorno que o nó foi deletado.
 
 O que é interessante, é que no arquivo `example.yaml`, definimos que teremos `3 nodes` executando o cockroachdb. Então quando deletamos o nó 2, o Kubernets irá verificar que o nó 2 teve uma falha, e  automaticamente reiciciará a pod e atualizará os dados baseados nos outros nós.
 
-Executando esse comando no terminal, verificamos que a pod já esta ativa novamente. 
+Executando esse comando no terminal, verificamos que a pod já foi reiniciada e esta com o **status: Running**. 
         
 ```shell
 $ kubectl get pod cockroachdb-2
