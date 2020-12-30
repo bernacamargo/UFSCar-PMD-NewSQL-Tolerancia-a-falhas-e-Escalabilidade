@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: memsql
 spec:
-  replicas: 1 # only create one pod (container)
+  replicas: 3 # only create one pod (container)
   selector:
     matchLabels:
       app: memsql
@@ -42,7 +42,7 @@ metadata:
   labels:
     app: memsql
 spec:
-  type: NodePort
+  type: LoadBalancer
   # Find all pods
   selector:
     app: memsql
