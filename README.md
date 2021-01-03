@@ -161,7 +161,7 @@ O retorno esperado é:
 
 Feito isso, já temos nosso cluster e nossa aplicação configurados e executando, temos que popular nosso banco de dados para realizar os testes. 
 
-#### 3.1. Acesse o bash de uma das pods que estão rodando a aplicação
+#### 3.1. Acesse o bash de uma das pods que estão executando a aplicação
 
 ```shell
 $ kubectl exec -it cockroachdb-2 bash
@@ -372,93 +372,309 @@ O retorno deve ser parecido com o seguinte:
 Dessa forma todas as requisições feitas à aplicação serão diluídas em mais dois nós (cockroachdb-3 e cockroachdb-4).
 
 >Nota: Para realizar a redução na quantidade de nós basta refazer o procedimento explicado acima reduzindo o número de nós. 
+#
+## SingleStore
 
-### SingleStore
-
-#### 1. Conceitos básicos
+### 1. Conceitos básicos
 
 O SingleStore é um software de banco de dados que possui como característica especial o fato de manter seus dados em memória e não em disco como no Cockroachdb.
 
 Dessa forma para conseguirmos executar o SingleStore dentro de um cluster Kubernetes, será necessário realizar o deploy da aplicação e configura-la como quisermos.
-
-#### 2. Fazendo deploy
+### 2. Preparar manifestos para instalar o Operator no cluster
+#### 2.1. rbac.yaml
 
 ```yaml
-# A deployment ensures pod(s) are restarted on failure
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: memsql-operator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: memsql-operator
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - services
+  - endpoints
+  - persistentvolumeclaims
+  - events
+  - configmaps
+  - secrets
+  verbs:
+  - '*'
+- apiGroups:
+  - policy
+  resources:
+  - poddisruptionbudgets
+  verbs:
+  - '*'
+- apiGroups:
+  - batch
+  resources:
+  - cronjobs
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+- apiGroups:
+  - apps
+  - extensions
+  resources:
+  - deployments
+  - daemonsets
+  - replicasets
+  - statefulsets
+  verbs:
+  - '*'
+- apiGroups:
+  - memsql.com
+  resources:
+  - '*'
+  verbs:
+  - '*'
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: memsql-operator
+subjects:
+- kind: ServiceAccount
+  name: memsql-operator
+roleRef:
+  kind: Role
+  name: memsql-operator
+  apiGroup: rbac.authorization.k8s.io
+```
+
+2.2 singlestore-cluster-crd.yaml
+
+```yaml
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: memsqlclusters.memsql.com
+spec:
+  group: memsql.com
+  names:
+    kind: MemsqlCluster
+    listKind: MemsqlClusterList
+    plural: memsqlclusters
+    singular: memsqlcluster
+    shortNames:
+      - memsql
+  scope: Namespaced
+  version: v1alpha1
+  subresources:
+    status: {}
+  additionalPrinterColumns:
+  - name: Aggregators
+    type: integer
+    description: Number of MemSQL Aggregators
+    JSONPath: .spec.aggregatorSpec.count
+  - name: Leaves
+    type: integer
+    description: Number of MemSQL Leaves (per availability group)
+    JSONPath: .spec.leafSpec.count
+  - name: Redundancy Level
+    type: integer
+    description: Redundancy level of MemSQL Cluster
+    JSONPath: .spec.redundancyLevel
+  - name: Age
+    type: date
+    JSONPath: .metadata.creationTimestamp
+```
+
+2.3 deployment.yaml
+
+```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: memsql
+  name: memsql-operator
 spec:
-  replicas: 1 # only create one pod (container)
+  replicas: 1
   selector:
     matchLabels:
-      app: memsql
+      name: memsql-operator
   template:
-    # Here's the definition of the pod:
     metadata:
-      # The service finds all pods with matching metadata
       labels:
-        app: memsql
+        name: memsql-operator
     spec:
+      serviceAccountName: memsql-operator
       containers:
-      - name: memsql
-        resources:
-        # Cluster-in-a-box image is pulled from Docker Hub 
-        image: memsql/cluster-in-a-box
-        ports:
-        - containerPort: 3306 # MemSQL db
-        - containerPort: 8080 # MemSQL Studio
-        env:
-        # 'Y' means keep running after cluster init
-        - name: START_AFTER_INIT
-          value: 'Y'
-        # TODO: set to your desired password
-        - name: ROOT_PASSWORD
-          value: 'password'
-        # TODO: paste your license key from portal.memsql.com here:
-        - name: LICENSE_KEY
-          value: BDk1N2M0OWRiNzIwMjQ3NTQ4NjNmOTMxZTM2YTc3NWNiAAAAAAAAAAAEAAAAAAAAAAwwNQIYGZA9v4rX3I8F3PFeLuWby9AZLc3OVv6mAhkAxraPYjbt4pe2Erua9H9WnNxicOOt5NO8AA==
----
-# A service load-balances across and routes traffic into pods
-apiVersion: v1
-kind: Service
+        - name: memsql-operator
+          image: memsql/operator:1.2.3-centos-ef2b8561
+          imagePullPolicy: Always
+          args: [
+            # Cause the operator to merge rather than replace annotations on services
+            "--merge-service-annotations",
+            # Allow the process inside the container to have read/write access to the `/var/lib/memsql` volume.
+            "--fs-group-id", "5555"
+          ]
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "memsql-operator"
+```
+
+2.4 singlestore-cluster.yaml 
+
+```yaml
+apiVersion: memsql.com/v1alpha1
+kind: MemsqlCluster
 metadata:
-  name: memsql
-  labels:
-    app: memsql
+  name: memsql-cluster
 spec:
-  type: NodePort
-  # Find all pods
-  selector:
-    app: memsql
-  ports:
-  # MemSQL db port:
-  - name: '3306'
-    nodePort: 30306
-    port: 3306
-    targetPort: 3306
-  # MemSQL Studio port:
-  - name: '8080'
-    nodePort: 30080
-    port: 8080
-    targetPort: 8080
+  license: $LICENSE_KEY
+  adminHashedPassword: "*6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9"
+  nodeImage:
+    repository: memsql/node
+    tag: latest
+
+  redundancyLevel: 1
+
+  serviceSpec:
+    objectMetaOverrides:
+      labels:
+        custom: label
+      annotations:
+        custom: annotations
+
+  aggregatorSpec:
+    count: 1
+    height: 0.5
+    storageGB: 25
+    storageClass: standard
+
+    objectMetaOverrides:
+      annotations:
+        optional: annotation
+      labels:
+        optional: label
+
+  leafSpec:
+    count: 2
+    height: 0.5
+    storageGB: 25
+    storageClass: standard
+
+    objectMetaOverrides:
+      annotations:
+        optional: annotation
+      labels:
+        optional: label
 ```
 
-> Nota: Definir `ROOT_PASSWORD` e `LICENSE_KEY` com seus valores
+> ADICIONAR CONFIGURAÇÕES: LICENSE_KEY, LEAF COUNT, AGGREGATOR COUNT E STORAGEDB
+### 3. Fazendo o deploy
+
+Primeiramente precisamos instalar os recursos para o operator
 
 ```shell
-kubectl apply -f deploy.yaml
+$ kubectl apply -f singlestore/operator/rbac.yaml
 ```
 
-#### 3. Liberando as portas dos Nós workers
+Agora crie as definições de recurso para o Operator
 
-- Porta do MemSQL DB
 ```shell
-gcloud compute firewall-rules create memsql --allow tcp:30306 --project pmd-final
+$ kubectl apply -f singlestore/operator/singlestore-cluster-crd.yaml
 ```
 
-- Porta do MemSQL-Studio
+Realize o deploy do MemSQL Operator
+
 ```shell
-gcloud compute firewall-rules create memsql-studio --allow tcp:30080 --project pmd-final
+$ kubectl apply -f singlestore/operator/deployment.yaml
 ```
+
+Verifique se existe uma pod chamada "memsql-operator" e seu status é `Running`
+
+```shell
+$ kubectl get pods
+```
+
+
+Finalmente iremos criar o cluster do MemSQL.
+
+```shell
+$ kubectl apply -f singlestore/operator/singlestore-cluster.yaml
+```
+
+Após alguns minutos execute o comando abaixo para verificar se os nós foram iniciados corretamente
+
+```shell
+$ kubectl get pods
+```
+
+### 3. Executando comandos SQL
+
+Primeiramente precisar copiar nosso arquivo `marvel.csv` para o container que está executando o memsql.
+
+```shell
+$ kubectl exec -it [POD_NAME] -- bash
+$ curl -O https://raw.githubusercontent.com/bernacamargo/PMD-tutorial/using-gcloud/marvel.csv
+```
+
+> Nota: Verifique se o arquivo foi baixado corretamente.
+
+#### 3.1. Acesse a pod que está executando a aplicação
+
+#### 3.3. Crie o banco de dados.
+
+```sql
+CREATE DATABASE commic_book;
+```
+#### 3.4. Popular a base de dados
+
+```sql
+CREATE TABLE commic_book.marvel (
+    url VARCHAR(255),
+    name_alias VARCHAR(255),
+    appearances VARCHAR(255),
+    current VARCHAR(255),
+    gender VARCHAR(255),
+    probationary VARCHAR(255),
+    full_reserve VARCHAR(255),
+    years VARCHAR(255),
+    years_since_joining VARCHAR(255),
+    honorary VARCHAR(255),
+    death1 VARCHAR(255),
+    return1 VARCHAR(255),
+    death2 VARCHAR(255),
+    return2 VARCHAR(255),
+    death3 VARCHAR(255),
+    return3 VARCHAR(255),
+    death4 VARCHAR(255),
+    return4 VARCHAR(255),
+    death5 VARCHAR(255),
+    return5 VARCHAR(255),
+    notes VARCHAR(255)
+);
+```
+
+```sql
+LOAD DATA INFILE "/home/memsql/marvel.csv"
+INTO TABLE commic_book.marvel
+FIELDS TERMINATED BY ',';
+```
+
+### 4. Testes de tolerância a falhas
+
+### 5. Testes de escalabilidade
+#
+## Conclusões

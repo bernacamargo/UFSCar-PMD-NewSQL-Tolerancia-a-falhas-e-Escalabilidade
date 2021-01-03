@@ -1,0 +1,43 @@
+apiVersion: memsql.com/v1alpha1
+kind: MemsqlCluster
+metadata:
+  name: memsql-cluster
+spec:
+  license: BDk1N2M0OWRiNzIwMjQ3NTQ4NjNmOTMxZTM2YTc3NWNiAAAAAAAAAAAEAAAAAAAAAAwwNQIYGZA9v4rX3I8F3PFeLuWby9AZLc3OVv6mAhkAxraPYjbt4pe2Erua9H9WnNxicOOt5NO8AA==
+  adminHashedPassword: "*6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9"
+  nodeImage:
+    repository: memsql/node
+    tag: latest
+
+  redundancyLevel: 1
+
+  serviceSpec:
+    objectMetaOverrides:
+      labels:
+        custom: label
+      annotations:
+        custom: annotations
+
+  aggregatorSpec:
+    count: 1
+    height: 0.5
+    storageGB: 25
+    storageClass: standard
+
+    objectMetaOverrides:
+      annotations:
+        optional: annotation
+      labels:
+        optional: label
+
+  leafSpec:
+    count: 2
+    height: 0.5
+    storageGB: 25
+    storageClass: standard
+
+    objectMetaOverrides:
+      annotations:
+        optional: annotation
+      labels:
+        optional: label
