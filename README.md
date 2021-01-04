@@ -198,7 +198,7 @@ CREATE DATABASE commic_book;
 
 #### 3.4. Popular a base de dados
 
-Agora vamos importar a nossa base antes de iniciar os testes, e para isso utilizaremos o arquivo [marvel.csv](https://raw.githubusercontent.com/bernacamargo/PMD-tutorial/using-gcloud/marvel.csv).
+Agora vamos importar a nossa base antes de iniciar os testes, e para isso utilizaremos o arquivo [marvel.csv](https://raw.githubusercontent.com/bernacamargo/PMD-tutorial/main/marvel.csv).
 
 ```sql
 IMPORT TABLE commic_book.marvel (
@@ -224,7 +224,7 @@ IMPORT TABLE commic_book.marvel (
     return5 STRING,
     notes STRING
 )
-CSV DATA ("https://raw.githubusercontent.com/bernacamargo/PMD-tutorial/using-gcloud/marvel.csv")
+CSV DATA ("https://raw.githubusercontent.com/bernacamargo/PMD-tutorial/main/marvel.csv")
 ;
 ```
 
@@ -317,7 +317,7 @@ Para entender o motivo que precisamos realizar este escalomamento, vamos supor q
 
 Todas essas ações são necessários estudos e estragégias que vão depender do propósito e abordagem desejada para cada projeto, por isso é importante se aprofundar para analisar os impactos positivos de cada ação, para que isso não atinja o usuário final. 
 
->Nota: Vale ressaltar que o cockroachdb precisa de pelo menos 3 nós para funcionar em cloud.
+>Nota: Vale ressaltar que o cockroachdb precisa de pelo menos 3 nós para funcionar em cloud do cockroach.
 
 #### 5.1. Modificar o número de nós do cockroachdb
 
@@ -376,10 +376,17 @@ Dessa forma todas as requisições feitas à aplicação serão diluídas em mai
 ## SingleStore
 
 ### 1. Conceitos básicos
+Primeiramente precisamos criar nosso cluster e utilizaremos o GKE para isto:
 
-O SingleStore é um software de banco de dados que possui como característica especial o fato de manter seus dados em memória e não em disco como no Cockroachdb.
+- Acesse a [Google Cloud Console](https://console.cloud.google.com)
+- Navegue até o `Kubernetes Engine` e clique em `Clusters`;
+- Clique em `Criar cluster` no centro da janela;
+- Defina o nome do cluster e clique em `Criar`.
 
-Dessa forma para conseguirmos executar o SingleStore dentro de um cluster Kubernetes, será necessário realizar o deploy da aplicação e configura-la como quisermos.
+Feito isso, um cluster com três nós será criado e inicializado. Em alguns momentos você já poderá acessá-lo para seguirmos com as configurações.
+
+> Nota: o teste foi realizaado com o cluster com as configurações mínimas para rodar o software e que os testes serem realizadas. 
+QWA\\\\\\\\\\
 ### 2. Preparar manifestos para instalar o Operator no cluster
 #### 2.1. rbac.yaml
 
@@ -758,8 +765,45 @@ INTO TABLE commic_book.marvel
 FIELDS TERMINATED BY ',';
 ```
 
-### 5. Testes de tolerância a falhas
+> Nota: o arquivo utilizado para importação é o que consta no git, [marvel](https://raw.githubusercontent.com/bernacamargo/PMD-tutorial/main/marvel.csv)
+### 5. Testes de tolerância à falhas
+
+Relembrando o objetivo da tolerância à falhas, ela impede que alguma mudança da nossa base de dados seja perdida por conta de algum problema, com isso é realizado o método de replicação para que todos os nós tenham as mudanças realizadas, e assim caso um nó tenha algum problema, o outro nó do sistema terá as informações consistentes. 
+
+Sabendo disso, vamos simular alguns casos para você perceber o este funcionamento. 
+Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na prática, para isso vamos efeturar uma operação de remoção(DELETE) em um nó e verificar o que acontece com os outros nós.
+
+Diferentemente do cockroach, é necessário ativar esse processo com o comando abaixo
+
+### 5.1 Replicação de dados nos nós.
+```sql
+ ****
+```
+#### 5.2 Simulando a falha de uma pod.
+   
+Vamos deletar um nó do MemSQL utilizando o comando abaixo:
+   
+```shell
+$ kubectl delete pods node-memsql-cluster-leaf-ag1-1
+```
+        
+Você terá o retorno que o nó foi deletado.  
+
+    pod "cockroachdb-2" deleted
+
+
+![img1](https://i.ibb.co/MD18t1k/Whats-App-Image-2021-01-03-at-17-31-05.jpg)
+
+Então quando deletamos o nó, o Kubernets irá verificar que o nó teve uma falha, e automaticamente reiciciará a pod e atualizará os dados baseados nos outros nós.
+
+Executando esse comando no terminal, verificamos que a pod já foi reiniciada e esta com o **status: Running**. 
+        
+```shell
+$ kubectl get pods
+```
+![img](https://i.ibb.co/MMsfqV4/Whats-App-Image-2021-01-03-at-17-31-14.jpg)
 
 ### 6. Testes de escalabilidade
 #
 ## Conclusões
+
