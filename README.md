@@ -383,6 +383,8 @@ Dessa forma para conseguirmos executar o SingleStore dentro de um cluster Kubern
 ### 2. Preparar manifestos para instalar o Operator no cluster
 #### 2.1. rbac.yaml
 
+Essa configuração irá criar a definição de um ServiceAccount para o MemSQL Operator utilizar.
+
 ```yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -456,6 +458,8 @@ roleRef:
 
 2.2 singlestore-cluster-crd.yaml
 
+Define um recurso específico MemSQLCluster como um tipo de recurso para ser utilizado pelo Operator
+
 ```yaml
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -493,6 +497,8 @@ spec:
 ```
 
 2.3 deployment.yaml
+
+Realiza o deploy do Operator, iniciando uma pod para executa-lo.
 
 ```yaml
 apiVersion: apps/v1
@@ -533,7 +539,11 @@ spec:
               value: "memsql-operator"
 ```
 
+> Nota: A imagem utilizada para a criação do container neste tutorial é a `memsql/operator:1.2.3-centos-ef2b8561`
+
 2.4 singlestore-cluster.yaml 
+
+Esta é a configuração principal do nosso cluster, é através deste arquivo que iremos trabalhar a escalabilidade e configurações de nossos nós.
 
 ```yaml
 apiVersion: memsql.com/v1alpha1
@@ -541,11 +551,11 @@ kind: MemsqlCluster
 metadata:
   name: memsql-cluster
 spec:
-  license: $LICENSE_KEY
+  license: LICENSE_KEY
   adminHashedPassword: "*6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9"
   nodeImage:
     repository: memsql/node
-    tag: latest
+    tag: centos-7.3.2-a364d4b31f
 
   redundancyLevel: 1
 
@@ -581,65 +591,140 @@ spec:
         optional: label
 ```
 
-> ADICIONAR CONFIGURAÇÕES: LICENSE_KEY, LEAF COUNT, AGGREGATOR COUNT E STORAGEDB
+Neste arquivo você precisará fazer algumas alterações:
+
+- Altere o campo `name` para o nome do seu cluster;
+- Altere o campo `license` e cole a sua [licença do SingleStore](https://portal.singlestore.com/licenses);
+- Defina no campo `adminHashedPassword` sua senha encriptografada para o usuário `admin`
+O hash existente no arquivo representa a senha `123456`, o qual utilizaremos para esse tutorial. Caso queira criar uma senha utilize o seguinte algoritmo:
+```python
+from hashlib import sha1
+print("*" + sha1(sha1('secretpass').digest()).hexdigest().upper())
+```
+- Altere o campo `redundancyLevel` para `2` caso deseje ativar o recruso de [Alta Disponibilidade](https://docs.singlestore.com/v7.3/guides/cluster-management/high-availability-and-disaster-recovery/managing-high-availability/managing-high-availability/);
+- Altere os campos `count` para aumentar ou diminuir a quantidade de nós agregadores ou folha;
+- O campo `height` define a quantidade de núcleos de CPU e memória RAM serão separados para o nó. O valor `1` representa a quantidade recomendada: `8 núcleos CPU e 32GB RAM`. O menor valor possível é `0.5` que representa metade da quantidade recomendada, ou seja, `4 núcleos CPU e 16GB RAM`;
+- Os campos `storageGB` definem a quantidade de armazenamento que será solicitado para cada volume persistente nos nós.
+
+
 ### 3. Fazendo o deploy
 
-Primeiramente precisamos instalar os recursos para o operator
-
+#### 3.1 Primeiramente precisamos instalar os recursos do memsql
 ```shell
-$ kubectl apply -f singlestore/operator/rbac.yaml
+$ kubectl apply -f singlestore/operator-rbac.yaml
 ```
 
-Agora crie as definições de recurso para o Operator
+    serviceaccount/memsql-operator created
+    role.rbac.authorization.k8s.io/memsql-operator created
+    rolebinding.rbac.authorization.k8s.io/memsql-operator created
+
+#### 3.2 Agora instale as definições de recurso para o Operator
 
 ```shell
-$ kubectl apply -f singlestore/operator/singlestore-cluster-crd.yaml
+$ kubectl apply -f singlestore/operator-crd.yaml
 ```
-
-Realize o deploy do MemSQL Operator
+    customresourcedefinition.apiextensions.k8s.io/memsqlclusters.memsql.com created
+#### 3.3 Realize o deploy do MemSQL Operator
 
 ```shell
-$ kubectl apply -f singlestore/operator/deployment.yaml
+$ kubectl apply -f singlestore/operator-deploy.yaml
 ```
 
-Verifique se existe uma pod chamada "memsql-operator" e seu status é `Running`
+    deployment.apps/memsql-operator created
+
+#### 3.4 Aguarde a pod chamada "memsql-operator" ter seu status como `Running`
+
+```shell
+$ kubectl get pods
+```
+    NAME                               READY   STATUS    RESTARTS   AGE
+    memsql-operator-5f4b595f89-hfqzt   1/1     Running   0          14s
+
+#### 3.5 Finalmente iremos realizar o deploy do cluster MemSQL.
+
+```shell
+$ kubectl apply -f singlestore/singlestore-cluster.yaml
+```
+    memsqlcluster.memsql.com/memsql-cluster created
+
+Verifique se os nós foram iniciados corretamente
 
 ```shell
 $ kubectl get pods
 ```
 
+    NAME                               READY   STATUS    RESTARTS   AGE
+    memsql-operator-5f4b595f89-hfqzt   1/1     Running   0          110s
+    node-memsql-cluster-leaf-ag1-0     2/2     Running   0          54s
+    node-memsql-cluster-leaf-ag1-1     2/2     Running   0          54s
+    node-memsql-cluster-master-0       2/2     Running   0          54s
 
-Finalmente iremos criar o cluster do MemSQL.
+A partir deste momento já temos nosso cluster Memsql configurado e funcionando, dessa forma já podemos iniciar os testes com querys SQL básicas.
 
-```shell
-$ kubectl apply -f singlestore/operator/singlestore-cluster.yaml
-```
+### 4. Acessando o Cluster
 
-Após alguns minutos execute o comando abaixo para verificar se os nós foram iniciados corretamente
+#### 4.1 Verificar os serviços criados no deploy
 
 ```shell
 $ kubectl get pods
 ```
+    NAME                     TYPE           CLUSTER-IP     EXTERNAL-IP     PORT(S)          AGE
+    kubernetes               ClusterIP      10.120.0.1     <none>          443/TCP          10m
+    svc-memsql-cluster       ClusterIP      None           <none>          3306/TCP         3m16s
+    svc-memsql-cluster-ddl   LoadBalancer   10.120.7.169   35.247.216.80   3306:32748/TCP   3m16s
 
-### 3. Executando comandos SQL
+Existem três serviços sendo executados em nosso cluster Kubernetes, contudo o que nos importa agora é o que possue o `TYPE` de `LoadBalancer`, chamado `svc-memsql-cluster-ddl`. 
+Este serviço é responsável por encaminhar as requisições recebidas no seu IP externo para as pods do cluster, no caso, para os nós do nosso cluster. 
 
-Primeiramente precisar copiar nosso arquivo `marvel.csv` para o container que está executando o memsql.
+Analisando o retorno do último comando, temos que o `host` do nosso serviço de banco de dados é `35.247.216.80` e que a `porta` é a `3306`.
+
+#### 4.2. Baixe o arquivo CSV para importação
+
+Agora vamos precisar copiar nosso arquivo `marvel.csv` para o container que está executando o memsql.
 
 ```shell
 $ kubectl exec -it [POD_NAME] -- bash
 $ curl -O https://raw.githubusercontent.com/bernacamargo/PMD-tutorial/using-gcloud/marvel.csv
 ```
 
-> Nota: Verifique se o arquivo foi baixado corretamente.
+> Nota: Antes de continuar verifique se o arquivo foi baixado corretamente.
 
-#### 3.1. Acesse a pod que está executando a aplicação
+#### 4.3. Acesse o banco de dados
 
-#### 3.3. Crie o banco de dados.
+> Nota: Para continuar é necessário que você tenha o MySQL instalado em sua máquina.
+
+Como já temos nossas credenciais, podemos iniciar a conexão com o serviço. Para isso basta acessar via bash ou qualquer interface utilizando os seguintes dados:
+
+    HOST              PORTA         USUÁRIO         SENHA
+    35.247.216.80     3306          admin           123456
+
+```shell
+$ mysql -u admin -h 35.247.216.80 -P 3306 -p
+```
+
+Após executar este comando irá aparecer para inserir a senha do usuário, faça isso e deverá ter acesso ao servidor.
+
+    Welcome to the MySQL monitor.  Commands end with ; or \g.
+    Your MySQL connection id is 1203
+    Server version: 5.5.58 MemSQL source distribution (compatible; MySQL Enterprise & MySQL Commercial)
+
+    Copyright (c) 2000, 2020, Oracle and/or its affiliates. All rights reserved.
+
+    Oracle is a registered trademark of Oracle Corporation and/or its
+    affiliates. Other names may be trademarks of their respective
+    owners.
+
+    Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+    mysql>
+
+Agora podemos executar nossos comandos SQL dentro do cluster.
+#### 4.4. Crie o banco de dados.
 
 ```sql
 CREATE DATABASE commic_book;
 ```
-#### 3.4. Popular a base de dados
+#### 4.5. Popular a base de dados
 
 ```sql
 CREATE TABLE commic_book.marvel (
@@ -673,8 +758,8 @@ INTO TABLE commic_book.marvel
 FIELDS TERMINATED BY ',';
 ```
 
-### 4. Testes de tolerância a falhas
+### 5. Testes de tolerância a falhas
 
-### 5. Testes de escalabilidade
+### 6. Testes de escalabilidade
 #
 ## Conclusões

@@ -7,7 +7,7 @@ spec:
   adminHashedPassword: "*6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9"
   nodeImage:
     repository: memsql/node
-    tag: latest
+    tag: centos-7.3.2-a364d4b31f
 
   redundancyLevel: 1
 
