@@ -690,16 +690,7 @@ Este serviço é responsável por encaminhar as requisições recebidas no seu I
 
 Analisando o retorno do último comando, temos que o `host` do nosso serviço de banco de dados é `35.247.216.80` e que a `porta` é a `3306`.
 
-#### 4.2. Baixe o arquivo CSV para importação
-
-Agora vamos precisar copiar nosso arquivo `marvel.csv` para o container que está executando o memsql.
-
-```shell
-$ kubectl exec -it [POD_NAME] -- bash
-$ curl -O https://raw.githubusercontent.com/bernacamargo/PMD-tutorial/using-gcloud/marvel.csv
-```
-
-#### 4.3. Acesse o banco de dados
+#### 4.2. Acesse o banco de dados
 
 > Nota: Para continuar é necessário que você tenha o MySQL instalado em sua máquina.
 
@@ -709,7 +700,7 @@ Como já temos nossas credenciais, podemos iniciar a conexão com o serviço. Pa
     35.247.216.80     3306          admin           123456
 
 ```shell
-$ mysql -u admin -h 35.247.216.80 -P 3306 -p
+$ mysql -u admin -h 35.247.216.80 -p
 ```
 
 Após executar este comando irá aparecer para inserir a senha do usuário, faça isso e deverá ter acesso ao servidor.
@@ -729,46 +720,63 @@ Após executar este comando irá aparecer para inserir a senha do usuário, faç
     mysql>
 
 Agora podemos executar nossos comandos SQL dentro do cluster.
-#### 4.4. Crie o banco de dados.
+
+#### 4.3. Crie o banco de dados.
 
 ```sql
-CREATE DATABASE commic_book;
+CREATE DATABASE bank;
 ```
-#### 4.5. Popular a base de dados
+#### 4.4. Popular a base de dados
 
 ```sql
-CREATE TABLE commic_book.marvel (
-    url VARCHAR(255),
-    name_alias VARCHAR(255),
-    appearances VARCHAR(255),
-    current VARCHAR(255),
-    gender VARCHAR(255),
-    probationary VARCHAR(255),
-    full_reserve VARCHAR(255),
-    years VARCHAR(255),
-    years_since_joining VARCHAR(255),
-    honorary VARCHAR(255),
-    death1 VARCHAR(255),
-    return1 VARCHAR(255),
-    death2 VARCHAR(255),
-    return2 VARCHAR(255),
-    death3 VARCHAR(255),
-    return3 VARCHAR(255),
-    death4 VARCHAR(255),
-    return4 VARCHAR(255),
-    death5 VARCHAR(255),
-    return5 VARCHAR(255),
-    notes VARCHAR(255)
+CREATE TABLE bank.accounts (
+    id          int             NOT NULL    AUTO_INCREMENT,
+    nome        VARCHAR(255)    NOT NULL,
+    agencia     VARCHAR(15)     NOT NULL,
+    conta       VARCHAR(15)     NOT NULL,
+    tipo_conta  VARCHAR(50)     NOT NULL,
+    saldo       FLOAT           NOT NULL,
+    PRIMARY KEY (id)
 );
 ```
 
 ```sql
-LOAD DATA INFILE "/home/memsql/marvel.csv"
-INTO TABLE commic_book.marvel
-FIELDS TERMINATED BY ',';
+INSERT INTO bank.accounts(id, nome, agencia, conta, tipo_conta, saldo) 
+VALUES 
+    (NULL, 'Pessoa 01', '5482-3', '85377-3', 'CORRENTE', 51230),
+    (NULL, 'Pessoa 02', '3123-5', '43176-4', 'CORRENTE', 1500),
+    (NULL, 'Pessoa 03', '4235-1', '12524-2', 'CORRENTE', 30000),
+    (NULL, 'Pessoa 04', '2315-3', '48255-9', 'POUPANÇA', 4232),
+    (NULL, 'Pessoa 05', '5144-7', '90132-8', 'CORRENTE', 84412),
+    (NULL, 'Pessoa 06', '7223-6', '98431-5', 'POUPANÇA', 554876),
+    (NULL, 'Pessoa 07', '2623-3', '68232-5', 'CORRENTE', 10000000),
+    (NULL, 'Pessoa 08', '9184-9', '12537-6', 'CORRENTE', 54656654),
+    (NULL, 'Pessoa 09', '5143-5', '10255-1', 'POUPANÇA', 974113),
+    (NULL, 'Pessoa 10', '8743-5', '23985-3', 'CORRENTE', 642154);
 ```
 
-> Nota: o arquivo utilizado para importação é o que consta no git, [marvel](https://raw.githubusercontent.com/bernacamargo/PMD-tutorial/main/marvel.csv)
+Podemos verificar se nossos cadastros funcionaram utilizando o comando abaixo
+
+```sql
+SELECT * FROM bank.accounts;
+```
+O retorno deve ser
+
+    +----+-----------+---------+---------+------------+----------+
+    | id | nome      | agencia | conta   | tipo_conta | saldo    |
+    +----+-----------+---------+---------+------------+----------+
+    |  8 | Pessoa 08 | 9184-9  | 12537-6 | CORRENTE   | 54656700 |
+    |  1 | Pessoa 01 | 5482-3  | 85377-3 | CORRENTE   |    51230 |
+    |  3 | Pessoa 03 | 4235-1  | 12524-2 | CORRENTE   |    30000 |
+    |  6 | Pessoa 06 | 7223-6  | 98431-5 | POUPANA    |   554876 |
+    |  5 | Pessoa 05 | 5144-7  | 90132-8 | CORRENTE   |    84412 |
+    |  7 | Pessoa 07 | 2623-3  | 68232-5 | CORRENTE   | 10000000 |
+    |  2 | Pessoa 02 | 3123-5  | 43176-4 | CORRENTE   |     1500 |
+    |  4 | Pessoa 04 | 2315-3  | 48255-9 | POUPANA    |     4232 |
+    | 10 | Pessoa 10 | 8743-5  | 23985-3 | CORRENTE   |   642154 |
+    |  9 | Pessoa 09 | 5143-5  | 10255-1 | POUPANA    |   974113 |
+    +----+-----------+-----
+
 ### 5. Testes de tolerância à falhas
 
 Relembrando o objetivo da tolerância à falhas, ela impede que alguma mudança da nossa base de dados seja perdida por conta de algum problema, com isso é realizado o método de replicação para que todos os nós tenham as mudanças realizadas, e assim caso um nó tenha algum problema, o outro nó do sistema terá as informações consistentes. 
@@ -778,30 +786,145 @@ Sabendo disso, vamos simular alguns casos para você perceber o este funcionamen
 Diferentemente do cockroach, em que configuramos um cluster totalmente replicado, no SingleStore temos um cluster gerenciado pelo nó master e seus dados armazenados e particionados em seus nós folha. Dessa forma só devemos realizar as operações de dados no nosso nó master, e assim a partição será realizada nas folhas através dos nossos agregadores, assim qualquer consulta que é feita pelo nó master, é processados pelos nós folhas. Isso ficará mais claro na prática, que demostraremos abaixo.
 
 
-#### 5.1 Simulando a falha de uma pod.
+#### 5.1 Simulando a falha de um nó.
    
 Após nos termos populado nosso banco pelo nosso nó master, nós vamos deletar o nosso nó master com o comando abaixo:
    
 ```shell
 $ kubectl delete pods node-memsql-cluster-master-0
 ```
-
 Você terá o retorno que o nó foi deletado.  
 
     pod "node-memsql-cluster-master-0" deleted
 
-Então quando deletamos o nó, o Kubernets irá reiniciar o nó baseados nos nós folhas, ou seja, irá recriar o banco atraves das partições, então se rodarmos esse comando no terminal, verificamos que a pod já foi reiniciada e esta com o **status: Running**. 
-        
+Logo em seguida verifique o status das pods
+
 ```shell
 $ kubectl get pods
 ```
 
-E podemos acessar o banco de dados no nó master e verificar que a nossa base de dados está atualizada. 
-'''
-colocar os bagulhos aqui 
-'''
+    NAME                               READY   STATUS        RESTARTS   AGE
+    memsql-operator-5f4b595f89-49q9k   1/1     Running       0          69m
+    node-memsql-cluster-leaf-ag1-0     2/2     Running       0          68m
+    node-memsql-cluster-leaf-ag1-1     2/2     Running       0          68m
+    node-memsql-cluster-master-0       2/2     Terminating   0          40m
 
-### 6. Testes de escalabilidade
+Quando deletamos o nó, o Operator do cluster irá reiniciar o nó automáticamente copiando as informações do nós folhas, ou seja, irá recriar o banco atraves das partições. 
+
+Se rodarmos esse comando no terminal, verificamos que a pod já foi reiniciada e esta com o **status: Running**. 
+
+```shell
+$ kubectl get pods
+```
+
+    NAME                               READY   STATUS    RESTARTS   AGE
+    memsql-operator-5f4b595f89-49q9k   1/1     Running   0          70m
+    node-memsql-cluster-leaf-ag1-0     2/2     Running   0          69m
+    node-memsql-cluster-leaf-ag1-1     2/2     Running   0          69m
+    node-memsql-cluster-master-0       2/2     Running   0          53s
+
+Agora vamos acessar o banco de dados novamente e verificar se os dados ainda existem. 
+
+```shell
+$ kubectl exec -it node-memsql-cluster-master-0 -- memsql -u admin -p
+```
+
+```sql
+SELECT * FROM bank.accounts;
+```
+
+O retorno deve ser
+
+    +----+-----------+---------+---------+------------+----------+
+    | id | nome      | agencia | conta   | tipo_conta | saldo    |
+    +----+-----------+---------+---------+------------+----------+
+    |  8 | Pessoa 08 | 9184-9  | 12537-6 | CORRENTE   | 54656700 |
+    |  1 | Pessoa 01 | 5482-3  | 85377-3 | CORRENTE   |    51230 |
+    |  3 | Pessoa 03 | 4235-1  | 12524-2 | CORRENTE   |    30000 |
+    |  6 | Pessoa 06 | 7223-6  | 98431-5 | POUPANA    |   554876 |
+    |  5 | Pessoa 05 | 5144-7  | 90132-8 | CORRENTE   |    84412 |
+    |  7 | Pessoa 07 | 2623-3  | 68232-5 | CORRENTE   | 10000000 |
+    |  2 | Pessoa 02 | 3123-5  | 43176-4 | CORRENTE   |     1500 |
+    |  4 | Pessoa 04 | 2315-3  | 48255-9 | POUPANA    |     4232 |
+    | 10 | Pessoa 10 | 8743-5  | 23985-3 | CORRENTE   |   642154 |
+    |  9 | Pessoa 09 | 5143-5  | 10255-1 | POUPANA    |   974113 |
+    +----+-----------+---------+---------+------------+----------+
+
+
 #
-## Conclusões
+### 6. Testes de escalabilidade
+
+O NewSQL utiliza a escalabilidade horizontal, que consiste em utilizar mais equipamentos e existe a partionalização dos dados de acordo com os critérios de cada projeto, diferente do vertical, que consiste em aumentar a capacidade da máquina, porém no horizontal também temos o aumento de capacidade de memória e de processamento, mas isso terá o impacto pela soma das máquinas em funcionamento. 
+
+Como fizemos o deploy do cluster SingleStore utilizando um Operator, toda escalabilidade será feita alterando o arquivo de configuração do cluster e realizando seu deploy novamente. 
+
+Primeiramente precisamos abrir o arquivo `singlestore-cluster.yaml`, pois é neste que iremos realizar as configurações de escalabilidade de nosso cluster.
+
+```yaml
+.
+.
+.
+  redundancyLevel: 1
+
+  serviceSpec:
+    objectMetaOverrides:
+      labels:
+        custom: label
+      annotations:
+        custom: annotations
+
+  aggregatorSpec:
+    count: 1
+    height: 0.5
+    storageGB: 25
+    storageClass: standard
+
+    objectMetaOverrides:
+      annotations:
+        optional: annotation
+      labels:
+        optional: label
+
+  leafSpec:
+    count: 2
+    height: 0.5
+    storageGB: 25
+    storageClass: standard
+
+    objectMetaOverrides:
+      annotations:
+        optional: annotation
+      labels:
+        optional: label
+```
+- Alta Disponibilidade:
+  
+  No inicio temos o campo `redundancyLevel`, este é responsável por ativar a `Alta Disponibilidade`, que irá criar no mesmo cluster outro conjunto de nós agregadores que atuaram apenas como replicas do primeiro conjunto de nós. Neste tutorial não iremos abordar esta função, pois será necessário uma infraestrutura muito mais potente.
+
+  > Nota: Quando o modo de Alta Disponibilidade está ativado, todos os nós do cluster são duplicados, assim como a solicitação de recursos.
+
+- Aumentando/Diminuindo o número de nós do cluster
+
+  Para podermos realizar o escalonamento horizontal de nosso cluster, precisamos adicionar mais nós para ele. Assim precisaremos apenas alterar os campos de `aggregatorSpec.count` e `leafSpec.count`, sendo a quantidade de nós do agregador(master) e de seus nós folha, respectivamente.
+
+- Aumentando/Diminuindo o armazenamento dos nós
+
+  Para modificarmos a capacidade de armazenamento de nossos nós, basta que alteremos os valores dos campos de `aggregatorSpec.storageGB` e `leafSpec.storageGB`, sendo a quantidade em GigaBytes de capacidade de armazenamento nós do agregador(master) e de seus nós folha, respectivamente.
+
+- Aumentando/Diminuindo a quantidade de núcleos de CPU e da Memória RAM de cada nó
+
+  Para podermos dar mais potência para nossos nós utilizaremos a propriedade `height`, a qual recebe um valor inteiro e representa um multiplicador para uma quantidade fixa de vCPU e memória ram. Dessa forma temos que o valor `1` representa a quantidade de 8 núcleos de CPU e 32GB de memória RAM.
+
+  > Nota: O menor valor aceitável para o campo `height` é 0.5, ou seja, para cada nó é necessário no mínimo 4 núcleos de CPU e 16GB de memória RAM.
+
+- Aplicando as alterações
+
+  Para realizar o deploy do cluster com a nova configuração basta realizar o commando `apply` novamente.
+
+  ```shell
+  $ kubectl apply -f singlestore/singlestore-cluster.yaml
+  ```
+      memsqlcluster.memsql.com/memsql-cluster created
+
+## Conclusão
 
