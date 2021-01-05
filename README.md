@@ -201,47 +201,35 @@ CREATE DATABASE commic_book;
 Agora vamos importar a nossa base antes de iniciar os testes, e para isso utilizaremos o arquivo [marvel.csv](https://raw.githubusercontent.com/bernacamargo/PMD-tutorial/main/marvel.csv).
 
 ```sql
-IMPORT TABLE commic_book.marvel (
-    url STRING,
-    name_alias STRING,
-    appearances STRING,
-    current STRING,
-    gender STRING,
-    probationary STRING,
-    full_reserve STRING,
-    years STRING,
-    years_since_joining STRING,
-    honorary STRING,
-    death1 STRING,
-    return1 STRING,
-    death2 STRING,
-    return2 STRING,
-    death3 STRING,
-    return3 STRING,
-    death4 STRING,
-    return4 STRING,
-    death5 STRING,
-    return5 STRING,
-    notes STRING
-)
-CSV DATA ("https://raw.githubusercontent.com/bernacamargo/PMD-tutorial/main/marvel.csv")
-;
+CREATE TABLE bank.accounts (
+    id          int             NOT NULL    AUTO_INCREMENT,
+    nome        VARCHAR(255)    NOT NULL,
+    agencia     VARCHAR(15)     NOT NULL,
+    conta       VARCHAR(15)     NOT NULL,
+    tipo_conta  VARCHAR(50)     NOT NULL,
+    saldo       FLOAT           NOT NULL,
+    PRIMARY KEY (id)
+);
+
+INSERT INTO bank.accounts(id, nome, agencia, conta, tipo_conta, saldo) 
+VALUES 
+    (NULL, 'Pessoa 01', '5482-3', '85377-3', 'CORRENTE', 51230),
+    (NULL, 'Pessoa 02', '3123-5', '43176-4', 'CORRENTE', 1500),
+    (NULL, 'Pessoa 03', '4235-1', '12524-2', 'CORRENTE', 30000),
+    (NULL, 'Pessoa 04', '2315-3', '48255-9', 'POUPANÇA', 4232),
+    (NULL, 'Pessoa 05', '5144-7', '90132-8', 'CORRENTE', 84412),
+    (NULL, 'Pessoa 06', '7223-6', '98431-5', 'POUPANÇA', 554876),
+    (NULL, 'Pessoa 07', '2623-3', '68232-5', 'CORRENTE', 10000000),
+    (NULL, 'Pessoa 08', '9184-9', '12537-6', 'CORRENTE', 54656654),
+    (NULL, 'Pessoa 09', '5143-5', '10255-1', 'POUPANÇA', 974113),
+    (NULL, 'Pessoa 10', '8743-5', '23985-3', 'CORRENTE', 642154);
+    
 ```
-
-Caso a importação não encontre nenhum problema, o retorno esperado deve ser:
-
-            job_id       |  status   | fraction_completed | rows | index_entries | bytes
-    ---------------------+-----------+--------------------+------+---------------+--------
-    619735075436953602 | succeeded |                  1 |  159 |             0 | 31767
-    (1 row)
-
-    Time: 617ms total (execution 617ms / network 0ms)
-
 
 Agora realize um SELECT na tabela para ver seus dados.
 
 ```sql
-SELECT * FROM commic_book.marvel;
+SELECT * FROM bank.accounts;
 ```
 
 Agora chegou o momento de realizarmos nossos testes para averiguar a tolerância a falhas e a escalabilidade do CockroachDB.
@@ -260,29 +248,25 @@ Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na
 Primeiramente vamos verificar como está o dado que desejamos modificar, execute o seguinte comando SQL para busca-lo na tabela `marvel`.
 
 ```sql
-SELECT url, name_alias FROM commic_book.marvel WHERE url='http://marvel.wikia.com/Anthony_Stark_(Earth-616)';
+SELECT * FROM bank.accounts WHERE agencia='5482-3' , conta='85377-3';
 ```
 
 O retorno esperado é:
 
-                            url                        |   name_alias
-    ----------------------------------------------------+-----------------
-    http://marvel.wikia.com/Anthony_Stark_(Earth-616) | Homem de ferro
-    (1 row)
-
+    COLOCAR A TABELA AQUI 
     Time: 2ms total (execution 1ms / network 0ms)
 
 
 Execute o comando abaixo para realizar a alteração no nó 2. 
 
 ```sql
-UPDATE commic_book.marvel SET name_alias = 'Homem de ferro' WHERE  url='http://marvel.wikia.com/Anthony_Stark_(Earth-616)';
+UPDATE bank.accounts SET tipo_conta='POUPANÇA' WHERE agencia='5482-3' , conta='85377-3';
 ```
 
 E agora acesse o nó 1, repetindo os passos da etapa [3](https://github.com/bernacamargo/PMD-tutorial#3-executando-comandos-sql-na-pod), e após entrar no build-in SQL, execute a consulta abaixo
 
 ```sql
-SELECT url, name_alias FROM commic_book.marvel WHERE url='http://marvel.wikia.com/Anthony_Stark_(Earth-616)';
+SELECT * FROM bank.accounts WHERE agencia='5482-3' , conta='85377-3';
 ```
 Como podemos observar, a atualização foi realizada e também foi replicada para as outras pods. Dessa forma podemos realizar este mesmo teste com as outras pods e veremos que todas estão sincronizadas.
 
@@ -928,3 +912,4 @@ Primeiramente precisamos abrir o arquivo `singlestore-cluster.yaml`, pois é nes
 
 ## Conclusão
 
+Quando inciamos o projeto já sabiamos que ele seria desafiador, pois muito mais do que a prática envolvida teriamos que provar e exemplificar através dos testes os conceitos e definições tanto do NewSQL como também as particularidades de cada software, do kubernetes que escolhemos para nos auxiliar e o google cloud, que foi na nossa escolha tanto pela documentação que existe, quanto também com a quantidade de créditos que eles dão para o teste gratuito.
