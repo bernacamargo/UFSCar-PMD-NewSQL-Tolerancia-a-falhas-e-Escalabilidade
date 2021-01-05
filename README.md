@@ -271,24 +271,20 @@ SELECT * FROM bank.accounts WHERE nome = 'Pessoa 01';
 
 O retorno esperado é:
 
-                            url                        |   name_alias
-    ----------------------------------------------------+-----------------
-    http://marvel.wikia.com/Anthony_Stark_(Earth-616) | Homem de ferro
-    (1 row)
-
+    COLOCAR A TABELA AQUI 
     Time: 2ms total (execution 1ms / network 0ms)
 
 
 Execute o comando abaixo para realizar a alteração no nó 2. 
 
 ```sql
-UPDATE commic_book.marvel SET name_alias = 'Homem de ferro' WHERE  url='http://marvel.wikia.com/Anthony_Stark_(Earth-616)';
+UPDATE bank.accounts SET tipo_conta='POUPANÇA' WHERE agencia='5482-3' , conta='85377-3';
 ```
 
 E agora acesse o nó 1, repetindo os passos da etapa [3](https://github.com/bernacamargo/PMD-tutorial#3-executando-comandos-sql-na-pod), e após entrar no build-in SQL, execute a consulta abaixo
 
 ```sql
-SELECT url, name_alias FROM commic_book.marvel WHERE url='http://marvel.wikia.com/Anthony_Stark_(Earth-616)';
+SELECT * FROM bank.accounts WHERE agencia='5482-3' , conta='85377-3';
 ```
 Como podemos observar, a atualização foi realizada e também foi replicada para as outras pods. Dessa forma podemos realizar este mesmo teste com as outras pods e veremos que todas estão sincronizadas.
 
@@ -934,3 +930,4 @@ Primeiramente precisamos abrir o arquivo `singlestore-cluster.yaml`, pois é nes
 
 ## Conclusão
 
+Quando inciamos o projeto já sabiamos que ele seria desafiador, pois muito mais do que a prática envolvida teriamos que provar e exemplificar através dos testes os conceitos e definições tanto do NewSQL como também as particularidades de cada software, do kubernetes que escolhemos para nos auxiliar e o google cloud, que foi na nossa escolha tanto pela documentação que existe, quanto também com a quantidade de créditos que eles dão para o teste gratuito.
