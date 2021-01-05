@@ -386,11 +386,14 @@ Primeiramente precisamos criar nosso cluster e utilizaremos o GKE para isto:
 Feito isso, um cluster com três nós será criado e inicializado. Em alguns momentos você já poderá acessá-lo para seguirmos com as configurações.
 
 > Nota: o teste foi realizaado com o cluster com as configurações mínimas para rodar o software e que os testes serem realizadas. 
-QWA\\\\\\\\\\
-### 2. Preparar manifestos para instalar o Operator no cluster
-#### 2.1. rbac.yaml
 
-Essa configuração irá criar a definição de um ServiceAccount para o MemSQL Operator utilizar.
+### 2. Preparar manifestos para instalar o Operator no cluster
+
+> Para garantir o funcionamento do cluster altere apenas o arquivo `singlestore-cluster.yaml `
+
+#### 2.1. rbac.yaml
+Essa configuração irá criar a definição de um ServiceAccount para o MemSQL Operator utilizar. 
+
 
 ```yaml
 apiVersion: v1
@@ -465,7 +468,7 @@ roleRef:
 
 2.2 singlestore-cluster-crd.yaml
 
-Define um recurso específico MemSQLCluster como um tipo de recurso para ser utilizado pelo Operator
+Define um recurso específico MemSQLCluster como um tipo de recurso para ser utilizado pelo Operator.
 
 ```yaml
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -546,11 +549,11 @@ spec:
               value: "memsql-operator"
 ```
 
-> Nota: A imagem utilizada para a criação do container neste tutorial é a `memsql/operator:1.2.3-centos-ef2b8561`
+> Nota: Neste projeto a imagem utilizada para a criação do container do operator é a `memsql/operator:1.2.3-centos-ef2b8561` disponibilizada no Docker Hub pelo SingleScore.
 
 2.4 singlestore-cluster.yaml 
 
-Esta é a configuração principal do nosso cluster, é através deste arquivo que iremos trabalhar a escalabilidade e configurações de nossos nós.
+Esta é a configuração principal do nosso cluster, é através deste arquivo que iremos definir se nosso cluster será replicado e também a quantidade de recursos alocados para cada nó.
 
 ```yaml
 apiVersion: memsql.com/v1alpha1
@@ -612,6 +615,8 @@ print("*" + sha1(sha1('secretpass').digest()).hexdigest().upper())
 - Altere os campos `count` para aumentar ou diminuir a quantidade de nós agregadores ou folha;
 - O campo `height` define a quantidade de núcleos de CPU e memória RAM serão separados para o nó. O valor `1` representa a quantidade recomendada: `8 núcleos CPU e 32GB RAM`. O menor valor possível é `0.5` que representa metade da quantidade recomendada, ou seja, `4 núcleos CPU e 16GB RAM`;
 - Os campos `storageGB` definem a quantidade de armazenamento que será solicitado para cada volume persistente nos nós.
+
+> Nota: Todos os arquivos .yaml acima também estão disponiveis na [documentação do SingleStore](https://docs.singlestore.com/v7.3/guides/deploy-memsql/self-managed/kubernetes/step-3/).
 
 
 ### 3. Fazendo o deploy
@@ -694,8 +699,6 @@ $ kubectl exec -it [POD_NAME] -- bash
 $ curl -O https://raw.githubusercontent.com/bernacamargo/PMD-tutorial/using-gcloud/marvel.csv
 ```
 
-> Nota: Antes de continuar verifique se o arquivo foi baixado corretamente.
-
 #### 4.3. Acesse o banco de dados
 
 > Nota: Para continuar é necessário que você tenha o MySQL instalado em sua máquina.
@@ -771,9 +774,9 @@ FIELDS TERMINATED BY ',';
 Relembrando o objetivo da tolerância à falhas, ela impede que alguma mudança da nossa base de dados seja perdida por conta de algum problema, com isso é realizado o método de replicação para que todos os nós tenham as mudanças realizadas, e assim caso um nó tenha algum problema, o outro nó do sistema terá as informações consistentes. 
 
 Sabendo disso, vamos simular alguns casos para você perceber o este funcionamento. 
-Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na prática, para isso vamos efeturar uma operação de remoção(DELETE) em um nó e verificar o que acontece com os outros nós.
+Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na prática.
 
-Diferentemente do cockroach, é necessário ativar esse processo com o comando abaixo
+Diferentemente do cockroach, em que configuramos um cluster totalmente replicado, no SingleStore temos um cluster gerenciado pelo nó master e seus dados armazenados e particionados em seus nós folha. Dessa forma só devemos realizar o acesso diretamente ao nó master para que ele gerencie a forma de armazenar os dados.
 
 ### 5.1 Replicação de dados nos nós.
 ```sql
@@ -786,13 +789,10 @@ Vamos deletar um nó do MemSQL utilizando o comando abaixo:
 ```shell
 $ kubectl delete pods node-memsql-cluster-leaf-ag1-1
 ```
-        
+
 Você terá o retorno que o nó foi deletado.  
 
-    pod "cockroachdb-2" deleted
-
-
-![img1](https://i.ibb.co/MD18t1k/Whats-App-Image-2021-01-03-at-17-31-05.jpg)
+    pod "node-memsql-cluster-leaf-ag1-1" deleted
 
 Então quando deletamos o nó, o Kubernets irá verificar que o nó teve uma falha, e automaticamente reiciciará a pod e atualizará os dados baseados nos outros nós.
 
@@ -801,7 +801,6 @@ Executando esse comando no terminal, verificamos que a pod já foi reiniciada e 
 ```shell
 $ kubectl get pods
 ```
-![img](https://i.ibb.co/MMsfqV4/Whats-App-Image-2021-01-03-at-17-31-14.jpg)
 
 ### 6. Testes de escalabilidade
 #
