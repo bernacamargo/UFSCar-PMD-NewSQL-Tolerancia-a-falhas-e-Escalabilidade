@@ -26,6 +26,7 @@
   - [4. Acessando o Cluster](#4-acessando-o-cluster)
   - [5. Testes de tolerância à falhas](#5-testes-de-tolerância-à-falhas)
   - [6. Testes de escalabilidade](#6-testes-de-escalabilidade)
+- [Benchmark](#benchmark)
 - [Conclusão](#conclusão)
    
 #
@@ -999,6 +1000,12 @@ Este é o trecho de código que iremos modificar para podermos testar a escalabi
   $ kubectl apply -f SingleStore/SingleStore-cluster.yaml
   ```
       memsqlcluster.memsql.com/memsql-cluster configured
+
+## Benchmark
+
+Antes da escolha dos softawares que usariamos dentro deste projeto, nos realizamos um benchmark para escolher o que mais se encaixava, com isso nós levantamos algumas coisas que seriam essenciais que foram: uma boa documentação que contesse vídeos e bons exemplos, gratuitos ou até mesmo com um valor alto de créditos para testes iniciais e gostariamos que os softwares entre si tivessem alguma diferência significativa. 
+
+Após esses critérios criados, nos escolhemos 
 
 ## Conclusão
 
