@@ -932,4 +932,8 @@ Primeiramente precisamos abrir o arquivo `singlestore-cluster.yaml`, pois é nes
 
 ## Conclusão
 
-Quando inciamos o projeto já sabiamos que ele seria desafiador, pois muito mais do que a prática envolvida teriamos que provar e exemplificar através dos testes os conceitos e definições tanto do NewSQL como também as particularidades de cada software, do kubernetes que escolhemos para nos auxiliar e o google cloud, que foi na nossa escolha tanto pela documentação que existe, quanto também com a quantidade de créditos que eles dão para o teste gratuito.
+Quando iniciamos o projeto já sabiamos que ele seria desafiador, pois muito mais do que a prática envolvida teriamos que provar e exemplificar através dos testes os conceitos e definições tanto do NewSQL como também as particularidades de cada software, do kubernetes que escolhemos para nos auxiliar e o google cloud, que foi na nossa escolha tanto pela documentação que existe, quanto também com a quantidade de créditos que eles dão para o teste gratuito.
+
+Durante o processo tivemos que realizar algumas escolhas, como por exemplo, deixar de simular de maneira local da nossa máquina e partir para o cloud, e com isso tivemos dificuldade com as configurações mínimas de hardware, em particularidade do SingleStore, antigo MemSQL, e assim os cenários que nós imaginavamos que seria o ideal para os testes acabou que teve que ser adaptado para conseguirmos entregar o projeto de acordo com as expectativas.
+
+Com esse trabalho, por fim, saimos com os conceitos de tolerância à falhas e escalabilidade mais claro e também com um conceito mais básico e prático do funcionamento da cloud. 
