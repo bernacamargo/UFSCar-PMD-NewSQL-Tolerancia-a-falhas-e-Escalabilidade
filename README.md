@@ -57,7 +57,7 @@ Neste exemplo utilizaremos o Operator fornecido pelo Cockroachdb, pois ele autom
 - Criar o CustomResourceDefinition (CRD) para o Operator
 
   ```shell
-  $ kubectl apply -f https://raw.githubusercontent.com/cockroachdb/cockroach-operator/master/config/crd/bases/crdb.cockroachlabs.com_crdbclusters.yaml
+  $ kubectl apply -f cockroachdb/operator-crd.yaml
   ```
 
   O retorno esperado é:
@@ -69,7 +69,7 @@ Neste exemplo utilizaremos o Operator fornecido pelo Cockroachdb, pois ele autom
 - Criar o Controller do Operator
 
   ```shell
-  $ kubectl apply -f https://raw.githubusercontent.com/cockroachdb/cockroach-operator/master/manifests/operator.yaml
+  $ kubectl apply -f cockroachdb/deploy.yaml
   ```
       
   O retorno esperado é:
@@ -91,21 +91,9 @@ Neste exemplo utilizaremos o Operator fornecido pelo Cockroachdb, pois ele autom
 
   > Nota: Caso o status da pod estiver como "ContainerCreating" é só aguardar alguns instantes que o kubernetes esta iniciando o container e logo deverá aparecer como "Running".
 
-### 2. Configuração da aplicação do cockroachdb.
-
--  Realize o download e a edição do arquivo `example.yaml`, este é responsável por realizar a configuração básica de uma aplicação do cockroachdb através do Operator.
+### 2. Configuração do cluster cockroachdb.
   
-    ```shell
-    $ curl -O https://raw.githubusercontent.com/cockroachdb/cockroach-operator/master/examples/example.yaml
-    ```
-
-    Utilize o `vim`(ou qualquer editor de texto de sua preferência) para abrir o arquivo baixado na etapa anterior.
-
-    ```shell
-    $ vim example.yaml
-    ```
-  
-- Com o arquivo aberto no editor de texto, vamos configurar a quantidade de CPU e memoria para cada pod do cluster. Basta procurar no arquivo baixado pelo código abaixo, descomentar as linhas e alterar os valores de `cpu` e `memory` para os que desejar.
+- Abra o arquivo `cockroachdb-cluster.yaml` com um editor de texto, vamos configurar a quantidade de CPU e memoria para cada pod do cluster. Basta procurar no arquivo pelo código abaixo, descomentar as linhas e alterar os valores de `cpu` e `memory` para os que desejar.
 
   ```yaml
   resources:
@@ -131,10 +119,10 @@ Neste exemplo utilizaremos o Operator fornecido pelo Cockroachdb, pois ele autom
 
   > Nota: caso você queira outra configuração para outro teste ou projeto, se atente de verificar as [configurações recomendadas para a execução da aplicação cockroachdb](https://www.cockroachlabs.com/docs/v20.2/recommended-production-settings#hardware).
 
-- Aplique as configurações feitas no arquivo `example.yaml`.
+- Aplique as configurações feitas no arquivo `cockroachdb-cluster.yaml`.
 
   ```shell
-  $ kubectl apply -f example.yaml
+  $ kubectl apply -f cockroachdb-cluster.yaml
   ```
 
   O retorno esperado é:
@@ -162,36 +150,34 @@ Neste exemplo utilizaremos o Operator fornecido pelo Cockroachdb, pois ele autom
 
 Feito isso, já temos nosso cluster e nossa aplicação configurados e executando, temos que popular nosso banco de dados para realizar os testes. 
 
-#### 3.1. Acesse o bash de uma das pods que estão executando a aplicação
+- Acesse o bash de uma das pods que estão executando a aplicação
 
-```shell
-$ kubectl exec -it cockroachdb-2 -- bash
-```
+  ```shell
+  $ kubectl exec -it cockroachdb-2 -- bash
+  ```
 
-> Nota: Para alterar qual pod voce está acessando basta alterar a parte do comando `cockroachdb-2` para o nome da pod que você deseja acessar.
+  > Nota: Para alterar qual pod voce está acessando basta alterar a parte do comando `cockroachdb-2` para o nome da pod que você deseja acessar.
 
-#### 3.2. Dentro da pod inicialize o [build-in SQL client](https://www.cockroachlabs.com/docs/v20.2/cockroach-sql) do cockroach
+  #### 3.2. Dentro da pod inicialize o [build-in SQL client](https://www.cockroachlabs.com/docs/v20.2/cockroach-sql) do cockroach
 
-```shell
-$ cockroach sql --certs-dir cockroach-certs
-```
+  ```shell
+  $ cockroach sql --certs-dir cockroach-certs
+  ```
 
-```shell
-#
-# Welcome to the CockroachDB SQL shell.
-# All statements must be terminated by a semicolon.
-# To exit, type: \q.
-#
-# Server version: CockroachDB CCL v20.2.0 (x86_64-unknown-linux-gnu,
-built 2020/11/09 16:01:45, go1.13.14) (same version as client)
-# Cluster ID: ff66ae62-8a67-4e24-a636-ce5f5fd2607d
-#
-root@:26257/defaultdb>
-```
+  ```shell
+  #
+  # Welcome to the CockroachDB SQL shell.
+  # All statements must be terminated by a semicolon.
+  # To exit, type: \q.
+  #
+  # Server version: CockroachDB CCL v20.2.0 (x86_64-unknown-linux-gnu,
+  built 2020/11/09 16:01:45, go1.13.14) (same version as client)
+  # Cluster ID: ff66ae62-8a67-4e24-a636-ce5f5fd2607d
+  #
+  root@:26257/defaultdb>
+  ```
 
-A partir deste momento, já é possível executar comandos SQL diretamente em nossas aplicações do cockroachdb.
-
-#### 3.3. Criando o banco e populando os dados
+  A partir deste momento, já é possível executar comandos SQL diretamente em nossas aplicações do cockroachdb.
 
 - Crie o banco de dados chamado `bank`
 
@@ -211,7 +197,11 @@ A partir deste momento, já é possível executar comandos SQL diretamente em no
       saldo       FLOAT           NOT NULL,
       PRIMARY KEY (id)
   );
+  ```
 
+- Crie os dados para a tabela
+  
+  ```sql
   INSERT INTO bank.accounts(id, nome, agencia, conta, tipo_conta, saldo) 
   VALUES 
       (NULL, 'Pessoa 01', '5482-3', '85377-3', 'CORRENTE', 51230),
@@ -232,7 +222,7 @@ A partir deste momento, já é possível executar comandos SQL diretamente em no
   SELECT * FROM bank.accounts;
   ```
 
-  O retorno deve ser
+  O retorno deve ser parecido com:
 
       +----+-----------+---------+---------+------------+----------+
       | id | nome      | agencia | conta   | tipo_conta | saldo    |
@@ -260,57 +250,66 @@ A tolerância à falhas tem como objetivo impedir que alguma mudança da nossa b
 Sabendo disso, vamos simular alguns casos para você perceber o este funcionamento. 
 Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na prática, para isso vamos efeturar uma operação de atualização(UPDATE) em um nó e verificar o que acontece com os outros nós. 
 
-#### 4.1. Replicação de dados
+- Replicação de dados
 
-Primeiramente vamos verificar como está o dado que desejamos modificar, execute o seguinte comando SQL para busca-lo na tabela `accounts`.
+  Primeiramente vamos verificar como está o dado que desejamos modificar, execute o seguinte comando SQL para busca-lo na tabela `accounts`.
 
-```sql
-SELECT * FROM bank.accounts WHERE nome = 'Pessoa 01';
-```
+  ```sql
+  SELECT * FROM bank.accounts WHERE nome = 'Pessoa 01';
+  ```
 
-O retorno deve ser
+  O retorno deve ser
 
-    +----+-----------+---------+---------+------------+----------+
-    | id | nome      | agencia | conta   | tipo_conta | saldo    |
-    +----+-----------+---------+---------+------------+----------+
-    |  1 | Pessoa 01 | 5482-3  | 85377-3 | CORRENTE   |    51230 |
-    +----+-----------+---------+---------+------------+----------+
+      +----+-----------+---------+---------+------------+----------+
+      | id | nome      | agencia | conta   | tipo_conta | saldo    |
+      +----+-----------+---------+---------+------------+----------+
+      |  1 | Pessoa 01 | 5482-3  | 85377-3 | CORRENTE   |    51230 |
+      +----+-----------+---------+---------+------------+----------+
 
-Execute o comando abaixo para realizar a alteração no nó 2. 
+  Execute o comando abaixo para realizar a alteração no nó 2. 
 
-```sql
-UPDATE bank.accounts SET tipo_conta='POUPANÇA' WHERE nome = 'Pessoa 01';
-```
+  ```sql
+  UPDATE bank.accounts SET tipo_conta='POUPANÇA' WHERE nome = 'Pessoa 01';
+  ```
 
-E agora acesse o nó 1, repetindo os passos da etapa [3](https://github.com/bernacamargo/PMD-tutorial#3-executando-comandos-sql-na-pod), e após entrar no build-in SQL, execute a consulta abaixo
+  E agora acesse o nó 1, repetindo os passos da etapa [3](https://github.com/bernacamargo/PMD-tutorial#3-executando-comandos-sql-na-pod), e após entrar no build-in SQL, execute a consulta abaixo
 
-```sql
-SELECT * FROM bank.accounts WHERE nome = 'Pessoa 01';
-```
-Como podemos observar, a atualização foi realizada e também foi replicada para as outras pods. Dessa forma podemos realizar este mesmo teste com as outras pods e veremos que todas estão sincronizadas.
+  ```sql
+  SELECT * FROM bank.accounts WHERE nome = 'Pessoa 01';
+  ```
 
-#### 4.2 Simulando a falha de uma pod.
+    O retorno deve ser
+
+      +----+-----------+---------+---------+------------+----------+
+      | id | nome      | agencia | conta   | tipo_conta | saldo    |
+      +----+-----------+---------+---------+------------+----------+
+      |  1 | Pessoa 01 | 5482-3  | 85377-3 | POUPANÇA   |    51230 |
+      +----+-----------+---------+---------+------------+----------+
+
+  Como podemos observar, a atualização foi realizada e também foi replicada para as outras pods. Dessa forma podemos realizar este mesmo teste com as outras pods e veremos que todas estão sincronizadas.
+
+- Simulando a falha de uma pod.
    
-Vamos deletar um nó do cockroachdb utilizando o comando abaixo:
-   
-```shell
-$ kubectl delete pod cockroachdb-2
-```
-        
-Você terá o retorno que o nó foi deletado.  
+  Vamos deletar um nó do cockroachdb utilizando o comando abaixo:
+    
+  ```shell
+  $ kubectl delete pod cockroachdb-2
+  ```
+          
+  Você terá o retorno que o nó foi deletado.  
 
-    pod "cockroachdb-2" deleted
+      pod "cockroachdb-2" deleted
 
-O que é interessante, é que no arquivo `example.yaml`, definimos que teremos `3 nodes` executando o cockroachdb. Então quando deletamos o nó 2, o Kubernets irá verificar que o nó 2 teve uma falha, e  automaticamente reiciciará a pod e atualizará os dados baseados nos outros nós.
+  O que é interessante, é que no arquivo `cockroachdb-cluster.yaml`, definimos que teremos `3 nodes` executando o cockroachdb. Então quando deletamos o nó 2, o Kubernets irá verificar que o nó 2 teve uma falha, e  automaticamente reiciciará a pod e atualizará os dados baseados nos outros nós.
 
-Executando esse comando no terminal, verificamos que a pod já foi reiniciada e esta com o **status: Running**. 
-        
-```shell
-$ kubectl get pod cockroachdb-2
-```
+  Executando esse comando no terminal, verificamos que a pod já foi reiniciada e esta com o **status: Running**. 
+          
+  ```shell
+  $ kubectl get pod cockroachdb-2
+  ```
 
-    NAME            READY     STATUS    RESTARTS   AGE
-    cockroachdb-2   1/1       Running   0          15s
+      NAME            READY     STATUS    RESTARTS   AGE
+      cockroachdb-2   1/1       Running   0          15s
   
 ### 5 Testes de Escalabilidade
 
@@ -322,61 +321,61 @@ Todas essas ações são necessários estudos e estragégias que vão depender d
 
 >Nota: Vale ressaltar que o cockroachdb precisa de pelo menos 3 nós para funcionar em cloud do cockroach.
 
-#### 5.1. Modificar o número de nós do cockroachdb
+- Modificar o número de nós do cockroachdb
 
-Nesta etapa iremos editar a quantidade de `nodes` que nossa aplicação do cockroachdb irá se sustentar.
+  Nesta etapa iremos editar a quantidade de `nodes` que nossa aplicação do cockroachdb irá se sustentar.
 
-Primeiramente abra o arquivo `example.yaml`
+  Primeiramente abra o arquivo `cockroachdb-cluster.yaml`
 
-```shell
-$ vim example.yaml
-```
+  ```shell
+  $ vim cockroachdb-cluster.yaml
+  ```
 
-Agora altere a última linha que explicita o número de nodes da aplicação e defina para **5** o valor dos `nodes`
+  Agora altere a última linha que explicita o número de nodes da aplicação e defina para **5** o valor dos `nodes`
 
-O arquivo alterado deve ficar da seguinte forma:
+  O arquivo alterado deve ficar da seguinte forma:
 
-```yaml
-.
-.
-.
-tlsEnabled: true
-image:
-    name: cockroachdb/cockroach:v20.2.0
-nodes: 5
-```
+  ```yaml
+  .
+  .
+  .
+  tlsEnabled: true
+  image:
+      name: cockroachdb/cockroach:v20.2.0
+  nodes: 5
+  ```
 
-Com o arquivo salvo, podemos executar o deploy da aplicação novamente com o comando
+  Com o arquivo salvo, podemos executar o deploy da aplicação novamente com o comando
 
-```shell
-$ kubectl apply -f example.yaml
-```
+  ```shell
+  $ kubectl apply -f cockroachdb-cluster.yaml
+  ```
 
-O retorno deve ser parecido com o seguinte:
+  O retorno deve ser parecido com o seguinte:
 
-    crdbcluster.crdb.cockroachlabs.com/cockroachdb configured
+      crdbcluster.crdb.cockroachlabs.com/cockroachdb configured
 
->Nota: O comando `apply` do Kubernetes permite que alteremos a configuração inicial da aplicação do cockroachdb sem que seja necessário reinicia-la.
+  >Nota: O comando `apply` do Kubernetes permite que alteremos a configuração inicial da aplicação do cockroachdb sem que seja necessário reinicia-la.
 
-Podemos verificar que nossa aplicação foi escalonada através das pods existentes
+  Podemos verificar que nossa aplicação foi escalonada através das pods existentes
 
-```shell
-$ kubectl get pods
-```
+  ```shell
+  $ kubectl get pods
+  ```
 
-O retorno deve ser parecido com o seguinte:
+  O retorno deve ser parecido com o seguinte:
 
-    NAME                                  READY   STATUS    RESTARTS   AGE
-    cockroach-operator-6867445556-5ll4v   1/1     Running   0          154m
-    cockroachdb-0                         1/1     Running   0          152m
-    cockroachdb-1                         1/1     Running   0          151m
-    cockroachdb-2                         1/1     Running   0          150m
-    cockroachdb-3                         1/1     Running   0          15m
-    cockroachdb-4                         1/1     Running   0          15m
+      NAME                                  READY   STATUS    RESTARTS   AGE
+      cockroach-operator-6867445556-5ll4v   1/1     Running   0          154m
+      cockroachdb-0                         1/1     Running   0          152m
+      cockroachdb-1                         1/1     Running   0          151m
+      cockroachdb-2                         1/1     Running   0          150m
+      cockroachdb-3                         1/1     Running   0          15m
+      cockroachdb-4                         1/1     Running   0          15m
 
-Dessa forma todas as requisições feitas à aplicação serão diluídas em mais dois nós (cockroachdb-3 e cockroachdb-4).
+  Dessa forma todas as requisições feitas à aplicação serão diluídas em mais dois nós (cockroachdb-3 e cockroachdb-4).
 
->Nota: Para realizar a redução na quantidade de nós basta refazer o procedimento explicado acima reduzindo o número de nós. 
+  >Nota: Para realizar a redução na quantidade de nós basta refazer o procedimento explicado acima reduzindo o número de nós. 
 #
 ## SingleStore
 
@@ -396,391 +395,397 @@ Feito isso, um cluster com três nós será criado e inicializado. Em alguns mom
 
 > Para garantir o funcionamento do cluster altere apenas o arquivo `singlestore-cluster.yaml `
 
-#### 2.1. rbac.yaml
-Essa configuração irá criar a definição de um ServiceAccount para o MemSQL Operator utilizar. 
+- rbac.yaml
+
+  Essa configuração irá criar a definição de um ServiceAccount para o MemSQL Operator utilizar. 
 
 
-```yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: memsql-operator
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: memsql-operator
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  - services
-  - endpoints
-  - persistentvolumeclaims
-  - events
-  - configmaps
-  - secrets
-  verbs:
-  - '*'
-- apiGroups:
-  - policy
-  resources:
-  - poddisruptionbudgets
-  verbs:
-  - '*'
-- apiGroups:
-  - batch
-  resources:
-  - cronjobs
-  verbs:
-  - '*'
-- apiGroups:
-  - ""
-  resources:
-  - namespaces
-  verbs:
-  - get
-- apiGroups:
-  - apps
-  - extensions
-  resources:
-  - deployments
-  - daemonsets
-  - replicasets
-  - statefulsets
-  verbs:
-  - '*'
-- apiGroups:
-  - memsql.com
-  resources:
-  - '*'
-  verbs:
-  - '*'
----
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: memsql-operator
-subjects:
-- kind: ServiceAccount
-  name: memsql-operator
-roleRef:
+  ```yaml
+  apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: memsql-operator
+  ---
+  apiVersion: rbac.authorization.k8s.io/v1
   kind: Role
-  name: memsql-operator
-  apiGroup: rbac.authorization.k8s.io
-```
+  metadata:
+    name: memsql-operator
+  rules:
+  - apiGroups:
+    - ""
+    resources:
+    - pods
+    - services
+    - endpoints
+    - persistentvolumeclaims
+    - events
+    - configmaps
+    - secrets
+    verbs:
+    - '*'
+  - apiGroups:
+    - policy
+    resources:
+    - poddisruptionbudgets
+    verbs:
+    - '*'
+  - apiGroups:
+    - batch
+    resources:
+    - cronjobs
+    verbs:
+    - '*'
+  - apiGroups:
+    - ""
+    resources:
+    - namespaces
+    verbs:
+    - get
+  - apiGroups:
+    - apps
+    - extensions
+    resources:
+    - deployments
+    - daemonsets
+    - replicasets
+    - statefulsets
+    verbs:
+    - '*'
+  - apiGroups:
+    - memsql.com
+    resources:
+    - '*'
+    verbs:
+    - '*'
+  ---
+  kind: RoleBinding
+  apiVersion: rbac.authorization.k8s.io/v1
+  metadata:
+    name: memsql-operator
+  subjects:
+  - kind: ServiceAccount
+    name: memsql-operator
+  roleRef:
+    kind: Role
+    name: memsql-operator
+    apiGroup: rbac.authorization.k8s.io
+  ```
 
-2.2 singlestore-cluster-crd.yaml
+- singlestore-cluster-crd.yaml
 
-Define um recurso específico MemSQLCluster como um tipo de recurso para ser utilizado pelo Operator.
+  Define um recurso específico MemSQLCluster como um tipo de recurso para ser utilizado pelo Operator.
 
-```yaml
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: memsqlclusters.memsql.com
-spec:
-  group: memsql.com
-  names:
-    kind: MemsqlCluster
-    listKind: MemsqlClusterList
-    plural: memsqlclusters
-    singular: memsqlcluster
-    shortNames:
-      - memsql
-  scope: Namespaced
-  version: v1alpha1
-  subresources:
-    status: {}
-  additionalPrinterColumns:
-  - name: Aggregators
-    type: integer
-    description: Number of MemSQL Aggregators
-    JSONPath: .spec.aggregatorSpec.count
-  - name: Leaves
-    type: integer
-    description: Number of MemSQL Leaves (per availability group)
-    JSONPath: .spec.leafSpec.count
-  - name: Redundancy Level
-    type: integer
-    description: Redundancy level of MemSQL Cluster
-    JSONPath: .spec.redundancyLevel
-  - name: Age
-    type: date
-    JSONPath: .metadata.creationTimestamp
-```
+  ```yaml
+  apiVersion: apiextensions.k8s.io/v1beta1
+  kind: CustomResourceDefinition
+  metadata:
+    name: memsqlclusters.memsql.com
+  spec:
+    group: memsql.com
+    names:
+      kind: MemsqlCluster
+      listKind: MemsqlClusterList
+      plural: memsqlclusters
+      singular: memsqlcluster
+      shortNames:
+        - memsql
+    scope: Namespaced
+    version: v1alpha1
+    subresources:
+      status: {}
+    additionalPrinterColumns:
+    - name: Aggregators
+      type: integer
+      description: Number of MemSQL Aggregators
+      JSONPath: .spec.aggregatorSpec.count
+    - name: Leaves
+      type: integer
+      description: Number of MemSQL Leaves (per availability group)
+      JSONPath: .spec.leafSpec.count
+    - name: Redundancy Level
+      type: integer
+      description: Redundancy level of MemSQL Cluster
+      JSONPath: .spec.redundancyLevel
+    - name: Age
+      type: date
+      JSONPath: .metadata.creationTimestamp
+  ```
 
-2.3 deployment.yaml
+- deployment.yaml
 
-Realiza o deploy do Operator, iniciando uma pod para executa-lo.
+  Realiza o deploy do Operator, iniciando uma pod para executa-lo.
 
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: memsql-operator
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      name: memsql-operator
-  template:
-    metadata:
-      labels:
+  ```yaml
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: memsql-operator
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
         name: memsql-operator
-    spec:
-      serviceAccountName: memsql-operator
-      containers:
-        - name: memsql-operator
-          image: memsql/operator:1.2.3-centos-ef2b8561
-          imagePullPolicy: Always
-          args: [
-            # Cause the operator to merge rather than replace annotations on services
-            "--merge-service-annotations",
-            # Allow the process inside the container to have read/write access to the `/var/lib/memsql` volume.
-            "--fs-group-id", "5555"
-          ]
-          env:
-            - name: WATCH_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: OPERATOR_NAME
-              value: "memsql-operator"
-```
+    template:
+      metadata:
+        labels:
+          name: memsql-operator
+      spec:
+        serviceAccountName: memsql-operator
+        containers:
+          - name: memsql-operator
+            image: memsql/operator:1.2.3-centos-ef2b8561
+            imagePullPolicy: Always
+            args: [
+              # Cause the operator to merge rather than replace annotations on services
+              "--merge-service-annotations",
+              # Allow the process inside the container to have read/write access to the `/var/lib/memsql` volume.
+              "--fs-group-id", "5555"
+            ]
+            env:
+              - name: WATCH_NAMESPACE
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.namespace
+              - name: POD_NAME
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.name
+              - name: OPERATOR_NAME
+                value: "memsql-operator"
+  ```
 
-> Nota: Neste projeto a imagem utilizada para a criação do container do operator é a `memsql/operator:1.2.3-centos-ef2b8561` disponibilizada no Docker Hub pelo SingleScore.
+  > Nota: Neste projeto a imagem utilizada para a criação do container do operator é a `memsql/operator:1.2.3-centos-ef2b8561` disponibilizada no Docker Hub pelo SingleScore.
 
-2.4 singlestore-cluster.yaml 
+- singlestore-cluster.yaml 
 
-Esta é a configuração principal do nosso cluster, é através deste arquivo que iremos definir se nosso cluster será replicado e também a quantidade de recursos alocados para cada nó.
+  Esta é a configuração principal do nosso cluster, é através deste arquivo que iremos definir se nosso cluster será replicado e também a quantidade de recursos alocados para cada nó.
 
-```yaml
-apiVersion: memsql.com/v1alpha1
-kind: MemsqlCluster
-metadata:
-  name: memsql-cluster
-spec:
-  license: LICENSE_KEY
-  adminHashedPassword: "*6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9"
-  nodeImage:
-    repository: memsql/node
-    tag: centos-7.3.2-a364d4b31f
+  ```yaml
+  apiVersion: memsql.com/v1alpha1
+  kind: MemsqlCluster
+  metadata:
+    name: memsql-cluster
+  spec:
+    license: LICENSE_KEY
+    adminHashedPassword: "*6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9"
+    nodeImage:
+      repository: memsql/node
+      tag: centos-7.3.2-a364d4b31f
 
-  redundancyLevel: 1
+    redundancyLevel: 1
 
-  serviceSpec:
-    objectMetaOverrides:
-      labels:
-        custom: label
-      annotations:
-        custom: annotations
+    serviceSpec:
+      objectMetaOverrides:
+        labels:
+          custom: label
+        annotations:
+          custom: annotations
 
-  aggregatorSpec:
-    count: 1
-    height: 0.5
-    storageGB: 25
-    storageClass: standard
+    aggregatorSpec:
+      count: 1
+      height: 0.5
+      storageGB: 25
+      storageClass: standard
 
-    objectMetaOverrides:
-      annotations:
-        optional: annotation
-      labels:
-        optional: label
+      objectMetaOverrides:
+        annotations:
+          optional: annotation
+        labels:
+          optional: label
 
-  leafSpec:
-    count: 2
-    height: 0.5
-    storageGB: 25
-    storageClass: standard
+    leafSpec:
+      count: 2
+      height: 0.5
+      storageGB: 25
+      storageClass: standard
 
-    objectMetaOverrides:
-      annotations:
-        optional: annotation
-      labels:
-        optional: label
-```
+      objectMetaOverrides:
+        annotations:
+          optional: annotation
+        labels:
+          optional: label
+  ```
 
-Neste arquivo você precisará fazer algumas alterações:
+  Neste arquivo você precisará fazer algumas alterações:
 
-- Altere o campo `name` para o nome do seu cluster;
-- Altere o campo `license` e cole a sua [licença do SingleStore](https://portal.singlestore.com/licenses);
-- Defina no campo `adminHashedPassword` sua senha encriptografada para o usuário `admin`
-O hash existente no arquivo representa a senha `123456`, o qual utilizaremos para esse tutorial. Caso queira criar uma senha utilize o seguinte algoritmo:
-```python
-from hashlib import sha1
-print("*" + sha1(sha1('secretpass').digest()).hexdigest().upper())
-```
-- Altere o campo `redundancyLevel` para `2` caso deseje ativar o recruso de [Alta Disponibilidade](https://docs.singlestore.com/v7.3/guides/cluster-management/high-availability-and-disaster-recovery/managing-high-availability/managing-high-availability/);
-- Altere os campos `count` para aumentar ou diminuir a quantidade de nós agregadores ou folha;
-- O campo `height` define a quantidade de núcleos de CPU e memória RAM serão separados para o nó. O valor `1` representa a quantidade recomendada: `8 núcleos CPU e 32GB RAM`. O menor valor possível é `0.5` que representa metade da quantidade recomendada, ou seja, `4 núcleos CPU e 16GB RAM`;
-- Os campos `storageGB` definem a quantidade de armazenamento que será solicitado para cada volume persistente nos nós.
+  - Altere o campo `name` para o nome do seu cluster;
+  - Altere o campo `license` e cole a sua [licença do SingleStore](https://portal.singlestore.com/licenses);
+  - Defina no campo `adminHashedPassword` sua senha encriptografada para o usuário `admin`
+  O hash existente no arquivo representa a senha `123456`, o qual utilizaremos para esse tutorial. Caso queira criar uma senha utilize o seguinte algoritmo:
+  ```python
+  from hashlib import sha1
+  print("*" + sha1(sha1('secretpass').digest()).hexdigest().upper())
+  ```
+  - Altere o campo `redundancyLevel` para `2` caso deseje ativar o recruso de [Alta Disponibilidade](https://docs.singlestore.com/v7.3/guides/cluster-management/high-availability-and-disaster-recovery/managing-high-availability/managing-high-availability/);
+  - Altere os campos `count` para aumentar ou diminuir a quantidade de nós agregadores ou folha;
+  - O campo `height` define a quantidade de núcleos de CPU e memória RAM serão separados para o nó. O valor `1` representa a quantidade recomendada: `8 núcleos CPU e 32GB RAM`. O menor valor possível é `0.5` que representa metade da quantidade recomendada, ou seja, `4 núcleos CPU e 16GB RAM`;
+  - Os campos `storageGB` definem a quantidade de armazenamento que será solicitado para cada volume persistente nos nós.
 
-> Nota: Todos os arquivos .yaml acima também estão disponiveis na [documentação do SingleStore](https://docs.singlestore.com/v7.3/guides/deploy-memsql/self-managed/kubernetes/step-3/).
+  > Nota: Todos os arquivos .yaml acima também estão disponiveis na [documentação do SingleStore](https://docs.singlestore.com/v7.3/guides/deploy-memsql/self-managed/kubernetes/step-3/).
 
 
 ### 3. Fazendo o deploy
 
-#### 3.1 Primeiramente precisamos instalar os recursos do memsql
-```shell
-$ kubectl apply -f singlestore/operator-rbac.yaml
-```
+- Primeiramente precisamos instalar os recursos do memsql
+  ```shell
+  $ kubectl apply -f singlestore/operator-rbac.yaml
+  ```
 
-    serviceaccount/memsql-operator created
-    role.rbac.authorization.k8s.io/memsql-operator created
-    rolebinding.rbac.authorization.k8s.io/memsql-operator created
+      serviceaccount/memsql-operator created
+      role.rbac.authorization.k8s.io/memsql-operator created
+      rolebinding.rbac.authorization.k8s.io/memsql-operator created
 
-#### 3.2 Agora instale as definições de recurso para o Operator
+- Agora instale as definições de recurso para o Operator
 
-```shell
-$ kubectl apply -f singlestore/operator-crd.yaml
-```
-    customresourcedefinition.apiextensions.k8s.io/memsqlclusters.memsql.com created
-#### 3.3 Realize o deploy do MemSQL Operator
+  ```shell
+  $ kubectl apply -f singlestore/operator-crd.yaml
+  ```
+      customresourcedefinition.apiextensions.k8s.io/memsqlclusters.memsql.com created
 
-```shell
-$ kubectl apply -f singlestore/operator-deploy.yaml
-```
+- Realize o deploy do MemSQL Operator
 
-    deployment.apps/memsql-operator created
+  ```shell
+  $ kubectl apply -f singlestore/operator-deploy.yaml
+  ```
 
-#### 3.4 Aguarde a pod chamada "memsql-operator" ter seu status como `Running`
+      deployment.apps/memsql-operator created
 
-```shell
-$ kubectl get pods
-```
-    NAME                               READY   STATUS    RESTARTS   AGE
-    memsql-operator-5f4b595f89-hfqzt   1/1     Running   0          14s
+- Aguarde a pod chamada "memsql-operator" ter seu status como `Running`
 
-#### 3.5 Finalmente iremos realizar o deploy do cluster MemSQL.
+  ```shell
+  $ kubectl get pods
+  ```
+      NAME                               READY   STATUS    RESTARTS   AGE
+      memsql-operator-5f4b595f89-hfqzt   1/1     Running   0          14s
 
-```shell
-$ kubectl apply -f singlestore/singlestore-cluster.yaml
-```
-    memsqlcluster.memsql.com/memsql-cluster created
+- Realizar o deploy do cluster MemSQL.
 
-Verifique se os nós foram iniciados corretamente
+  ```shell
+  $ kubectl apply -f singlestore/singlestore-cluster.yaml
+  ```
+      memsqlcluster.memsql.com/memsql-cluster created
 
-```shell
-$ kubectl get pods
-```
+  Verifique se os nós foram iniciados corretamente
 
-    NAME                               READY   STATUS    RESTARTS   AGE
-    memsql-operator-5f4b595f89-hfqzt   1/1     Running   0          110s
-    node-memsql-cluster-leaf-ag1-0     2/2     Running   0          54s
-    node-memsql-cluster-leaf-ag1-1     2/2     Running   0          54s
-    node-memsql-cluster-master-0       2/2     Running   0          54s
+  ```shell
+  $ kubectl get pods
+  ```
 
-A partir deste momento já temos nosso cluster Memsql configurado e funcionando, dessa forma já podemos iniciar os testes com querys SQL básicas.
+      NAME                               READY   STATUS    RESTARTS   AGE
+      memsql-operator-5f4b595f89-hfqzt   1/1     Running   0          110s
+      node-memsql-cluster-leaf-ag1-0     2/2     Running   0          54s
+      node-memsql-cluster-leaf-ag1-1     2/2     Running   0          54s
+      node-memsql-cluster-master-0       2/2     Running   0          54s
+
+  A partir deste momento já temos nosso cluster Memsql configurado e funcionando, dessa forma já podemos iniciar os testes com querys SQL básicas.
 
 ### 4. Acessando o Cluster
 
-#### 4.1 Verificar os serviços criados no deploy
+- Verificar os serviços criados no deploy
 
-```shell
-$ kubectl get pods
-```
-    NAME                     TYPE           CLUSTER-IP     EXTERNAL-IP     PORT(S)          AGE
-    kubernetes               ClusterIP      10.120.0.1     <none>          443/TCP          10m
-    svc-memsql-cluster       ClusterIP      None           <none>          3306/TCP         3m16s
-    svc-memsql-cluster-ddl   LoadBalancer   10.120.7.169   35.247.216.80   3306:32748/TCP   3m16s
+  ```shell
+  $ kubectl get pods
+  ```
+      NAME                     TYPE           CLUSTER-IP     EXTERNAL-IP     PORT(S)          AGE
+      kubernetes               ClusterIP      10.120.0.1     <none>          443/TCP          10m
+      svc-memsql-cluster       ClusterIP      None           <none>          3306/TCP         3m16s
+      svc-memsql-cluster-ddl   LoadBalancer   10.120.7.169   35.247.216.80   3306:32748/TCP   3m16s
 
-Existem três serviços sendo executados em nosso cluster Kubernetes, contudo o que nos importa agora é o que possue o `TYPE` de `LoadBalancer`, chamado `svc-memsql-cluster-ddl`. 
-Este serviço é responsável por encaminhar as requisições recebidas no seu IP externo para as pods do cluster, no caso, para os nós do nosso cluster. 
+  Existem três serviços sendo executados em nosso cluster Kubernetes, contudo o que nos importa agora é o que possue o `TYPE` de `LoadBalancer`, chamado `svc-memsql-cluster-ddl`. 
+  Este serviço é responsável por encaminhar as requisições recebidas no seu IP externo para as pods do cluster, no caso, para os nós do nosso cluster. 
 
-Analisando o retorno do último comando, temos que o `host` do nosso serviço de banco de dados é `35.247.216.80` e que a `porta` é a `3306`.
+  Analisando o retorno do último comando, temos que o `host` do nosso serviço de banco de dados é `35.247.216.80` e que a `porta` é a `3306`.
 
-#### 4.2. Acesse o banco de dados
+- Acesse o banco de dados
 
-> Nota: Para continuar é necessário que você tenha o MySQL instalado em sua máquina.
+  > Nota: Para continuar é necessário que você tenha o MySQL instalado em sua máquina.
 
-Como já temos nossas credenciais, podemos iniciar a conexão com o serviço. Para isso basta acessar via bash ou qualquer interface utilizando os seguintes dados:
+  Como já temos nossas credenciais, podemos iniciar a conexão com o serviço. Para isso basta acessar via bash ou qualquer interface utilizando os seguintes dados:
 
-    HOST              PORTA         USUÁRIO         SENHA
-    35.247.216.80     3306          admin           123456
+      HOST              PORTA         USUÁRIO         SENHA
+      35.247.216.80     3306          admin           123456
 
-```shell
-$ mysql -u admin -h 35.247.216.80 -p
-```
+  ```shell
+  $ mysql -u admin -h 35.247.216.80 -p
+  ```
 
-Após executar este comando irá aparecer para inserir a senha do usuário, faça isso e deverá ter acesso ao servidor.
+  Após executar este comando irá aparecer para inserir a senha do usuário, faça isso e deverá ter acesso ao servidor.
 
-    Welcome to the MySQL monitor.  Commands end with ; or \g.
-    Your MySQL connection id is 1203
-    Server version: 5.5.58 MemSQL source distribution (compatible; MySQL Enterprise & MySQL Commercial)
+      Welcome to the MySQL monitor.  Commands end with ; or \g.
+      Your MySQL connection id is 1203
+      Server version: 5.5.58 MemSQL source distribution (compatible; MySQL Enterprise & MySQL Commercial)
 
-    Copyright (c) 2000, 2020, Oracle and/or its affiliates. All rights reserved.
+      Copyright (c) 2000, 2020, Oracle and/or its affiliates. All rights reserved.
 
-    Oracle is a registered trademark of Oracle Corporation and/or its
-    affiliates. Other names may be trademarks of their respective
-    owners.
+      Oracle is a registered trademark of Oracle Corporation and/or its
+      affiliates. Other names may be trademarks of their respective
+      owners.
 
-    Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+      Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
 
-    mysql>
+      mysql>
 
-Agora podemos executar nossos comandos SQL dentro do cluster.
+  Agora podemos executar nossos comandos SQL dentro do cluster.
 
-#### 4.3. Crie o banco de dados.
+- Crie o banco de dados chamado `bank`
 
-```sql
-CREATE DATABASE bank;
-```
-#### 4.4. Popular a base de dados
+  ```sql
+  CREATE DATABASE bank;
+  ```
 
-```sql
-CREATE TABLE bank.accounts (
-    id          int             NOT NULL    AUTO_INCREMENT,
-    nome        VARCHAR(255)    NOT NULL,
-    agencia     VARCHAR(15)     NOT NULL,
-    conta       VARCHAR(15)     NOT NULL,
-    tipo_conta  VARCHAR(50)     NOT NULL,
-    saldo       FLOAT           NOT NULL,
-    PRIMARY KEY (id)
-);
-```
+- Crie uma tabela chamada `bank.accounts`
 
-```sql
-INSERT INTO bank.accounts(id, nome, agencia, conta, tipo_conta, saldo) 
-VALUES 
-    (NULL, 'Pessoa 01', '5482-3', '85377-3', 'CORRENTE', 51230),
-    (NULL, 'Pessoa 02', '3123-5', '43176-4', 'CORRENTE', 1500),
-    (NULL, 'Pessoa 03', '4235-1', '12524-2', 'CORRENTE', 30000),
-    (NULL, 'Pessoa 04', '2315-3', '48255-9', 'POUPANÇA', 4232),
-    (NULL, 'Pessoa 05', '5144-7', '90132-8', 'CORRENTE', 84412),
-    (NULL, 'Pessoa 06', '7223-6', '98431-5', 'POUPANÇA', 554876),
-    (NULL, 'Pessoa 07', '2623-3', '68232-5', 'CORRENTE', 10000000),
-    (NULL, 'Pessoa 08', '9184-9', '12537-6', 'CORRENTE', 54656654),
-    (NULL, 'Pessoa 09', '5143-5', '10255-1', 'POUPANÇA', 974113),
-    (NULL, 'Pessoa 10', '8743-5', '23985-3', 'CORRENTE', 642154);
-```
+  ```sql
+  CREATE TABLE bank.accounts (
+      id          int             NOT NULL    AUTO_INCREMENT,
+      nome        VARCHAR(255)    NOT NULL,
+      agencia     VARCHAR(15)     NOT NULL,
+      conta       VARCHAR(15)     NOT NULL,
+      tipo_conta  VARCHAR(50)     NOT NULL,
+      saldo       FLOAT           NOT NULL,
+      PRIMARY KEY (id)
+  );
+  ```
 
-Podemos verificar se nossos cadastros funcionaram utilizando o comando abaixo
+- Crie os dados para a tabela
+  
+  ```sql
+  INSERT INTO bank.accounts(id, nome, agencia, conta, tipo_conta, saldo) 
+  VALUES 
+      (NULL, 'Pessoa 01', '5482-3', '85377-3', 'CORRENTE', 51230),
+      (NULL, 'Pessoa 02', '3123-5', '43176-4', 'CORRENTE', 1500),
+      (NULL, 'Pessoa 03', '4235-1', '12524-2', 'CORRENTE', 30000),
+      (NULL, 'Pessoa 04', '2315-3', '48255-9', 'POUPANÇA', 4232),
+      (NULL, 'Pessoa 05', '5144-7', '90132-8', 'CORRENTE', 84412),
+      (NULL, 'Pessoa 06', '7223-6', '98431-5', 'POUPANÇA', 554876),
+      (NULL, 'Pessoa 07', '2623-3', '68232-5', 'CORRENTE', 10000000),
+      (NULL, 'Pessoa 08', '9184-9', '12537-6', 'CORRENTE', 54656654),
+      (NULL, 'Pessoa 09', '5143-5', '10255-1', 'POUPANÇA', 974113),
+      (NULL, 'Pessoa 10', '8743-5', '23985-3', 'CORRENTE', 642154);
+  ```
 
-```sql
-SELECT * FROM bank.accounts;
-```
-O retorno deve ser
+- Agora realize um SELECT na tabela para ver seus dados.
 
-    +----+-----------+---------+---------+------------+----------+
-    | id | nome      | agencia | conta   | tipo_conta | saldo    |
-    +----+-----------+---------+---------+------------+----------+
-    |  8 | Pessoa 08 | 9184-9  | 12537-6 | CORRENTE   | 54656700 |
-    |  1 | Pessoa 01 | 5482-3  | 85377-3 | CORRENTE   |    51230 |
-    |  3 | Pessoa 03 | 4235-1  | 12524-2 | CORRENTE   |    30000 |
-    |  6 | Pessoa 06 | 7223-6  | 98431-5 | POUPANA    |   554876 |
-    |  5 | Pessoa 05 | 5144-7  | 90132-8 | CORRENTE   |    84412 |
-    |  7 | Pessoa 07 | 2623-3  | 68232-5 | CORRENTE   | 10000000 |
-    |  2 | Pessoa 02 | 3123-5  | 43176-4 | CORRENTE   |     1500 |
-    |  4 | Pessoa 04 | 2315-3  | 48255-9 | POUPANA    |     4232 |
-    | 10 | Pessoa 10 | 8743-5  | 23985-3 | CORRENTE   |   642154 |
-    |  9 | Pessoa 09 | 5143-5  | 10255-1 | POUPANA    |   974113 |
-    +----+-----------+-----
+  ```sql
+  SELECT * FROM bank.accounts;
+  ```
+
+  O retorno deve ser parecido com:
+
+      +----+-----------+---------+---------+------------+----------+
+      | id | nome      | agencia | conta   | tipo_conta | saldo    |
+      +----+-----------+---------+---------+------------+----------+
+      |  8 | Pessoa 08 | 9184-9  | 12537-6 | CORRENTE   | 54656700 |
+      |  1 | Pessoa 01 | 5482-3  | 85377-3 | CORRENTE   |    51230 |
+      |  3 | Pessoa 03 | 4235-1  | 12524-2 | CORRENTE   |    30000 |
+      |  6 | Pessoa 06 | 7223-6  | 98431-5 | POUPANA    |   554876 |
+      |  5 | Pessoa 05 | 5144-7  | 90132-8 | CORRENTE   |    84412 |
+      |  7 | Pessoa 07 | 2623-3  | 68232-5 | CORRENTE   | 10000000 |
+      |  2 | Pessoa 02 | 3123-5  | 43176-4 | CORRENTE   |     1500 |
+      |  4 | Pessoa 04 | 2315-3  | 48255-9 | POUPANA    |     4232 |
+      | 10 | Pessoa 10 | 8743-5  | 23985-3 | CORRENTE   |   642154 |
+      |  9 | Pessoa 09 | 5143-5  | 10255-1 | POUPANA    |   974113 |
+      +----+-----------+---------+---------+------------+----------+
 
 ### 5. Testes de tolerância à falhas
 
@@ -791,69 +796,69 @@ Sabendo disso, vamos simular alguns casos para você perceber o este funcionamen
 Diferentemente do cockroach, em que configuramos um cluster totalmente replicado, no SingleStore temos um cluster gerenciado pelo nó master e seus dados armazenados e particionados em seus nós folha. Dessa forma só devemos realizar as operações de dados no nosso nó master, e assim a partição será realizada nas folhas através dos nossos agregadores, assim qualquer consulta que é feita pelo nó master, é processados pelos nós folhas. Isso ficará mais claro na prática, que demostraremos abaixo.
 
 
-#### 5.1 Simulando a falha de um nó.
+- Simulando a falha de um nó.
    
-Após nos termos populado nosso banco pelo nosso nó master, nós vamos deletar o nosso nó master com o comando abaixo:
-   
-```shell
-$ kubectl delete pods node-memsql-cluster-master-0
-```
-Você terá o retorno que o nó foi deletado.  
+  Após nos termos populado nosso banco pelo nosso nó master, nós vamos deletar o nosso nó master com o comando abaixo:
+    
+  ```shell
+  $ kubectl delete pods node-memsql-cluster-master-0
+  ```
+  Você terá o retorno que o nó foi deletado.  
 
-    pod "node-memsql-cluster-master-0" deleted
+      pod "node-memsql-cluster-master-0" deleted
 
-Logo em seguida verifique o status das pods
+  Logo em seguida verifique o status das pods
 
-```shell
-$ kubectl get pods
-```
+  ```shell
+  $ kubectl get pods
+  ```
 
-    NAME                               READY   STATUS        RESTARTS   AGE
-    memsql-operator-5f4b595f89-49q9k   1/1     Running       0          69m
-    node-memsql-cluster-leaf-ag1-0     2/2     Running       0          68m
-    node-memsql-cluster-leaf-ag1-1     2/2     Running       0          68m
-    node-memsql-cluster-master-0       2/2     Terminating   0          40m
+      NAME                               READY   STATUS        RESTARTS   AGE
+      memsql-operator-5f4b595f89-49q9k   1/1     Running       0          69m
+      node-memsql-cluster-leaf-ag1-0     2/2     Running       0          68m
+      node-memsql-cluster-leaf-ag1-1     2/2     Running       0          68m
+      node-memsql-cluster-master-0       2/2     Terminating   0          40m
 
-Quando deletamos o nó, o Operator do cluster irá reiniciar o nó automáticamente copiando as informações do nós folhas, ou seja, irá recriar o banco atraves das partições. 
+  Quando deletamos o nó, o Operator do cluster irá reiniciar o nó automáticamente copiando as informações do nós folhas, ou seja, irá recriar o banco atraves das partições. 
 
-Se rodarmos esse comando no terminal, verificamos que a pod já foi reiniciada e esta com o **status: Running**. 
+  Se rodarmos esse comando no terminal, verificamos que a pod já foi reiniciada e esta com o **status: Running**. 
 
-```shell
-$ kubectl get pods
-```
+  ```shell
+  $ kubectl get pods
+  ```
 
-    NAME                               READY   STATUS    RESTARTS   AGE
-    memsql-operator-5f4b595f89-49q9k   1/1     Running   0          70m
-    node-memsql-cluster-leaf-ag1-0     2/2     Running   0          69m
-    node-memsql-cluster-leaf-ag1-1     2/2     Running   0          69m
-    node-memsql-cluster-master-0       2/2     Running   0          53s
+      NAME                               READY   STATUS    RESTARTS   AGE
+      memsql-operator-5f4b595f89-49q9k   1/1     Running   0          70m
+      node-memsql-cluster-leaf-ag1-0     2/2     Running   0          69m
+      node-memsql-cluster-leaf-ag1-1     2/2     Running   0          69m
+      node-memsql-cluster-master-0       2/2     Running   0          53s
 
-Agora vamos acessar o banco de dados novamente e verificar se os dados ainda existem. 
+  Agora vamos acessar o banco de dados novamente e verificar se os dados ainda existem. 
 
-```shell
-$ kubectl exec -it node-memsql-cluster-master-0 -- memsql -u admin -p
-```
+  ```shell
+  $ kubectl exec -it node-memsql-cluster-master-0 -- memsql -u admin -p
+  ```
 
-```sql
-SELECT * FROM bank.accounts;
-```
+  ```sql
+  SELECT * FROM bank.accounts;
+  ```
 
-O retorno deve ser
+  O retorno deve ser
 
-    +----+-----------+---------+---------+------------+----------+
-    | id | nome      | agencia | conta   | tipo_conta | saldo    |
-    +----+-----------+---------+---------+------------+----------+
-    |  8 | Pessoa 08 | 9184-9  | 12537-6 | CORRENTE   | 54656700 |
-    |  1 | Pessoa 01 | 5482-3  | 85377-3 | CORRENTE   |    51230 |
-    |  3 | Pessoa 03 | 4235-1  | 12524-2 | CORRENTE   |    30000 |
-    |  6 | Pessoa 06 | 7223-6  | 98431-5 | POUPANA    |   554876 |
-    |  5 | Pessoa 05 | 5144-7  | 90132-8 | CORRENTE   |    84412 |
-    |  7 | Pessoa 07 | 2623-3  | 68232-5 | CORRENTE   | 10000000 |
-    |  2 | Pessoa 02 | 3123-5  | 43176-4 | CORRENTE   |     1500 |
-    |  4 | Pessoa 04 | 2315-3  | 48255-9 | POUPANA    |     4232 |
-    | 10 | Pessoa 10 | 8743-5  | 23985-3 | CORRENTE   |   642154 |
-    |  9 | Pessoa 09 | 5143-5  | 10255-1 | POUPANA    |   974113 |
-    +----+-----------+---------+---------+------------+----------+
+      +----+-----------+---------+---------+------------+----------+
+      | id | nome      | agencia | conta   | tipo_conta | saldo    |
+      +----+-----------+---------+---------+------------+----------+
+      |  8 | Pessoa 08 | 9184-9  | 12537-6 | CORRENTE   | 54656700 |
+      |  1 | Pessoa 01 | 5482-3  | 85377-3 | CORRENTE   |    51230 |
+      |  3 | Pessoa 03 | 4235-1  | 12524-2 | CORRENTE   |    30000 |
+      |  6 | Pessoa 06 | 7223-6  | 98431-5 | POUPANA    |   554876 |
+      |  5 | Pessoa 05 | 5144-7  | 90132-8 | CORRENTE   |    84412 |
+      |  7 | Pessoa 07 | 2623-3  | 68232-5 | CORRENTE   | 10000000 |
+      |  2 | Pessoa 02 | 3123-5  | 43176-4 | CORRENTE   |     1500 |
+      |  4 | Pessoa 04 | 2315-3  | 48255-9 | POUPANA    |     4232 |
+      | 10 | Pessoa 10 | 8743-5  | 23985-3 | CORRENTE   |   642154 |
+      |  9 | Pessoa 09 | 5143-5  | 10255-1 | POUPANA    |   974113 |
+      +----+-----------+---------+---------+------------+----------+
 
 
 #
@@ -937,4 +942,4 @@ Quando iniciamos o projeto já sabiamos que ele seria desafiador, pois muito mai
 
 Durante o processo tivemos que realizar algumas escolhas, como por exemplo, deixar de simular de maneira local da nossa máquina e partir para o cloud, e com isso tivemos dificuldade com as configurações mínimas de hardware, em particularidade do SingleStore, antigo MemSQL, e assim os cenários que nós imaginavamos que seria o ideal para os testes acabou que teve que ser adaptado para conseguirmos entregar o projeto de acordo com as expectativas.
 
-Com esse trabalho, por fim, saimos com os conceitos de tolerância à falhas e escalabilidade mais claro e também com um conceito mais básico e prático do funcionamento da cloud. 
+Com esse trabalho, por fim, finalizamos o projeto com grande aprendizado dos conceitos de tolerância à falhas e escalabilidade e também com um conceito mais básico e prático do funcionamento da cloud. 
