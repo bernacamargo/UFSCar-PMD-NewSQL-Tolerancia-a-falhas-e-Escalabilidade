@@ -1,4 +1,4 @@
-<h1>NewSQL - Tolerância à falha e escalabilidade com Cockroachdb e SingleStore</h1>
+<h1>NewSQL - Tolerância à falha e escalabilidade com CockroachDB e SingleStore</h1>
 
 ## Autores
 - Bernardo Pinheiro Camargo [@bernacamargo](https://github.com/bernacamargo)
@@ -11,9 +11,9 @@
 - [Introdução](#introdução)
 - [Tecnologias que vamos utilizar](#tecnologias-que-vamos-utilizar)
 - [Pré-requisitos](#pré-requisitos)
-- [Recursos mínimos necessários](#recursos-mínimos-necessários)
+- [Recursos necessários](#recursos-necessários)
 - [Criar um Cluster Kubernetes](#criar-um-cluster-kubernetes)
-- [Cockroachdb](#cockroachdb)
+- [CockroachDB](#cockroachdb)
   - [1. Deploy do Operator](#1-deploy-do-operator)
   - [2. Deploy do cluster](#2-deploy-do-cluster)
   - [3. Executando comandos SQL](#3-executando-comandos-sql)
@@ -52,16 +52,24 @@ Antes de começarmos, é necessário que você atente-se à alguns detalhes cons
 - Conhecimentos básicos em SQL, Kubernetes, Docker e Google Cloud;
 - Conta no Google Cloud com créditos;
 
-## Recursos mínimos necessários
+## Recursos necessários
 
 - CockroachDB
 
-      Value	            Recommendation	    Reference
-      RAM per vCPU	        4 GiB	        CPU and memory
-      Capacity per vCPU	    150 GiB	          Storage
+  RECURSO | RECOMENDAÇÃO
+  ------- | -------
+  CPU   | 2 núcleos de vCPU por nó
+  Memória | No mínimo 4GB por núcleo de vCPU
+  Armazenamento | Cada nó deve ter pelo menos 150GB por núcleo de vCPU
+
 - SingleStore
   
-  
+  RECURSO | RECOMENDAÇÃO
+  ------- | -------
+  CPU   | 4 núcleos de vCPU por nó
+  Memória | No mínimo 4GB por núcleo de vCPU
+  Armazenamento | Pelo menos 3 vezes a quantidade de memória RAM
+
 ## Criar um Cluster Kubernetes
 
 Para podermos simular um ambiente isolado e que garanta as características de sistemas distribuídos utilizaremos um cluster local orquestrado pelo Kubernetes, o qual é responsável por gerenciar instâncias de máquinas virtuais para execução de aplicativos em containers. 
@@ -71,7 +79,7 @@ Neste projeto utilizaremos o GKE para gerenciar e hospedar nossos dois clusters 
 Primeiramente precisamos criar nosso cluster no GKE:
 
 - Acesse a [Google Cloud Console](https://console.cloud.google.com)
-- Navegue até o `Kubernetes Engine` e clique em `Clusters`;
+- No menu da esqueda, navegue até `Kubernetes Engine` e clique em `Clusters`;
 - Clique em `Criar cluster` no centro da janela;
 - Defina o nome do cluster;
 - Configure a quantidade de recursos do cluster;
@@ -84,34 +92,34 @@ Primeiramente precisamos criar nosso cluster no GKE:
 
 Feito isso, um cluster com três nós será criado e inicializado. Em alguns momentos você já poderá acessá-lo para seguirmos com as configurações.
 
-> Para ambos os softwares Cockroachdb e SingleStore utilizaremos o mesmo processo para inicialização do cluster kubernetes, porém em clusters com configurações diferentes.
+> Para ambos os softwares CockroachDB e SingleStore utilizaremos o mesmo processo para inicialização do cluster kubernetes, porém em clusters com configurações diferentes.
 
 #
-## Cockroachdb
+## CockroachDB
 
-Antes de iniciar os testes, temos que configurar o Cockroachdb no nosso cluster e para nos auxiliar utilizamos as documentações do Cockroachdb e kubernetes, e citaremos abaixo os comandos que devem ser realizados.
+Antes de iniciar os testes, temos que configurar o CockroachDB no nosso cluster e para nos auxiliar utilizamos as documentações do CockroachDB e kubernetes, e citaremos abaixo os comandos que devem ser realizados.
 
-Para configurar a aplicação do cockroachdb dentro do cluster podemos fazer de algumas formas:
+Para configurar a aplicação do CockroachDB dentro do cluster podemos fazer de algumas formas:
 - [Usando o Operator](https://kubernetes.io/pt/docs/concepts/extend-kubernetes/operator/)
 - [Usando o Helm](https://helm.sh/)
 - Usando arquivos de configurações sem ferramentas automatizadoras.
 
-Neste exemplo utilizaremos o Operator fornecido pelo Cockroachdb, pois ele automatiza a configuração da aplicação e assim não teremos que entrar a fundo em alguns detalhes mais técnicos do Kubernetes.
+Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele irá automatizar diversas configuração do cluster.
 
->Nota: É importante notar que temos um cluster kubernetes, composto de três instâncias de máquina virtual (1 master e 2 workers), onde as pods são alocadas e cada uma representa um nó do CockroachDB que está executando. Dessa forma quando falamos sobre os nós do cockroachdb estamos nos referindo as pods e quando falamos dos nós do cluster estamos falando das instâncias de máquina virtual do Kubernetes.
+>Nota: É importante notar que temos um cluster kubernetes, composto de três instâncias de máquina virtual (1 master e 2 workers), onde as pods são alocadas e cada uma representa um nó do CockroachDB que está executando. Dessa forma quando falamos sobre os nós do CockroachDB estamos nos referindo as pods e quando falamos dos nós do cluster estamos falando das instâncias de máquina virtual do Kubernetes.
 
 ### 1. Deploy do Operator
 
 - Definir as autorizações para o Operator gerenciar o cluster
 
   ```shell
-  $ kubectl apply -f cockroachdb/operator-rbac.yaml
+  $ kubectl apply -f CockroachDB/operator-rbac.yaml
   ```
 
 - Criar o CustomResourceDefinition (CRD) para o Operator
 
   ```shell
-  $ kubectl apply -f cockroachdb/operator-crd.yaml
+  $ kubectl apply -f CockroachDB/operator-crd.yaml
   ```
 
   O retorno esperado é:
@@ -123,7 +131,7 @@ Neste exemplo utilizaremos o Operator fornecido pelo Cockroachdb, pois ele autom
 - Criar o Controller do Operator
 
   ```shell
-  $ kubectl apply -f cockroachdb/operator-deploy.yaml
+  $ kubectl apply -f CockroachDB/operator-deploy.yaml
   ```
       
   O retorno esperado é:
@@ -147,7 +155,8 @@ Neste exemplo utilizaremos o Operator fornecido pelo Cockroachdb, pois ele autom
 
 ### 2. Deploy do cluster
   
-- Abra o arquivo `cockroachdb-cluster.yaml` com um editor de texto, vamos configurar a quantidade de CPU e memoria para cada pod do cluster. Basta procurar no arquivo pelo código abaixo, descomentar as linhas e alterar os valores de `cpu` e `memory` para os que desejar.
+- Abra o arquivo `cockroachdb-cluster.yaml` com um editor de texto
+- Esta etapa é opcional, porém extremamente recomendada em ambientes de produção. <br> Vamos configurar a quantidade de CPU e memoria para cada pod do cluster. Basta procurar no arquivo pelo código abaixo, descomentar as linhas e alterar os valores de `cpu` e `memory`, seguindo a regra de 4GB de memória RAM para cada um núcleo de CPU.
 
   ```yaml
   resources:
@@ -161,17 +170,13 @@ Neste exemplo utilizaremos o Operator fornecido pelo Cockroachdb, pois ele autom
   ```
 
   > Nota: Caso não defina nenhum valor inicial a aplicação extendera seus limites de uso de cpu/memoria até o limite do nó do cluster. 
-
-  > Nota: Essa etapa é opicional e contudo é recomendada em ambientes de produção, visto que limitar o uso de recurso na aplicação pode evitar um desperdício de recurso.
           
-- Modifique a quantidade de armazenamento cada pod terá, altere para quantos GigaBytes você desejar.
+- Modifique a quantidade de armazenamento cada pod terá, altere o valor do campo `storage` seguindo a regra de 150GB por núcleo de CPU.
   ```yaml
   resources:
       requests:
-          storage: "1Gi"
+          storage: "300Gi"
   ```
-
-  > Nota: caso você queira outra configuração para outro teste ou projeto, se atente de verificar as [configurações recomendadas para a execução da aplicação cockroachdb](https://www.cockroachlabs.com/docs/v20.2/recommended-production-settings#hardware).
 
 - Aplique as configurações feitas no arquivo `cockroachdb-cluster.yaml`.
 
@@ -181,9 +186,9 @@ Neste exemplo utilizaremos o Operator fornecido pelo Cockroachdb, pois ele autom
 
   O retorno esperado é:
 
-      crdbcluster.crdb.cockroachlabs.com/cockroachdb created    
+      crdbcluster.crdb.cockroachlabs.com/CockroachDB created    
 
-  > Nota: Este arquivo irá solicitar para o Operador que crie uma aplicação StatefulSet com três pods que funcionarão como um cluster cockroachdb.
+  > Nota: Este arquivo irá solicitar para o Operador que crie uma aplicação StatefulSet com três pods que funcionarão como um cluster CockroachDB.
 
 - Aguarde alguns minutos e verifique se as pods estão sendo executadas.
 
@@ -231,7 +236,7 @@ Feito isso, já temos nosso cluster e nossa aplicação configurados e executand
   root@:26257/defaultdb>
   ```
 
-  A partir deste momento, já é possível executar comandos SQL diretamente em nossas aplicações do cockroachdb.
+  A partir deste momento, já é possível executar comandos SQL diretamente em nossas aplicações do CockroachDB.
 
 - Crie o banco de dados chamado `bank`
 
@@ -298,7 +303,7 @@ Agora chegou o momento de realizarmos nossos testes para averiguar a tolerância
 #
 ### 4. Testes de tolerância a falhas
 
->Nota: É importante ressaltar que temos um cluster kubernetes, composto de três instâncias de máquinas virtuais (3 workers), onde as pods são executadas e cada pod representa um nó do CockroachDB. Dessa forma quando falamos sobre os nós do cockroachdb estamos nos referindo as pods e quando falamos dos nós do cluster estamos nos referindo as instâncias de máquina virtual do Kubernetes.
+>Nota: É importante ressaltar que temos um cluster kubernetes, composto de três instâncias de máquinas virtuais (3 workers), onde as pods são executadas e cada pod representa um nó do CockroachDB. Dessa forma quando falamos sobre os nós do CockroachDB estamos nos referindo as pods e quando falamos dos nós do cluster estamos nos referindo as instâncias de máquina virtual do Kubernetes.
     
 A tolerância à falhas tem como objetivo impedir que alguma mudança da nossa base de dados seja perdida por conta de algum problema, com isso é realizado o método de replicação para que todos os nós tenham as mudanças realizadas, e assim caso um nó tenha algum problema, o outro nó do sistema terá as informações consistentes. 
 
@@ -345,7 +350,7 @@ Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na
 
 - Simulando a falha de uma pod.
    
-  Vamos deletar um nó do cockroachdb utilizando o comando abaixo:
+  Vamos deletar um nó do CockroachDB utilizando o comando abaixo:
     
   ```shell
   $ kubectl delete pod cockroachdb-2
@@ -355,7 +360,7 @@ Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na
 
       pod "cockroachdb-2" deleted
 
-  O que é interessante, é que no arquivo `cockroachdb-cluster.yaml`, definimos que teremos `3 nodes` executando o cockroachdb. Então quando deletamos o nó 2, o Kubernets irá verificar que o nó 2 teve uma falha, e  automaticamente reiciciará a pod e atualizará os dados baseados nos outros nós.
+  O que é interessante, é que no arquivo `cockroachdb-cluster.yaml`, definimos que teremos `3 nodes` executando o CockroachDB. Então quando deletamos o nó 2, o Kubernets irá verificar que o nó 2 teve uma falha, e  automaticamente reiciciará a pod e atualizará os dados baseados nos outros nós.
 
   Executando esse comando no terminal, verificamos que a pod já foi reiniciada e esta com o **status: Running**. 
           
@@ -374,11 +379,9 @@ Para entender o motivo que precisamos realizar este escalomamento, vamos supor q
 
 Todas essas ações são necessários estudos e estragégias que vão depender do propósito e abordagem desejada para cada projeto, por isso é importante se aprofundar para analisar os impactos positivos de cada ação, para que isso não atinja o usuário final. 
 
->Nota: Vale ressaltar que o cockroachdb precisa de pelo menos 3 nós para funcionar em cloud do cockroach.
+- Modificar o número de nós do CockroachDB
 
-- Modificar o número de nós do cockroachdb
-
-  Nesta etapa iremos editar a quantidade de `nodes` que nossa aplicação do cockroachdb irá se sustentar.
+  Nesta etapa iremos editar a quantidade de `nodes` que nossa aplicação do CockroachDB irá se sustentar.
 
   Primeiramente abra o arquivo `cockroachdb-cluster.yaml`
 
@@ -396,7 +399,7 @@ Todas essas ações são necessários estudos e estragégias que vão depender d
   .
   tlsEnabled: true
   image:
-      name: cockroachdb/cockroach:v20.2.0
+      name: CockroachDB/cockroach:v20.2.0
   nodes: 5
   ```
 
@@ -408,9 +411,9 @@ Todas essas ações são necessários estudos e estragégias que vão depender d
 
   O retorno deve ser parecido com o seguinte:
 
-      crdbcluster.crdb.cockroachlabs.com/cockroachdb configured
+      crdbcluster.crdb.cockroachlabs.com/CockroachDB configured
 
-  >Nota: O comando `apply` do Kubernetes permite que alteremos a configuração inicial da aplicação do cockroachdb sem que seja necessário reinicia-la.
+  >Nota: O comando `apply` do Kubernetes permite que alteremos a configuração inicial da aplicação do CockroachDB sem que seja necessário reinicia-la.
 
   Podemos verificar que nossa aplicação foi escalonada através das pods existentes
 
@@ -430,7 +433,7 @@ Todas essas ações são necessários estudos e estragégias que vão depender d
 
   Dessa forma todas as requisições feitas à aplicação serão diluídas em mais dois nós (cockroachdb-3 e cockroachdb-4).
 
-  >Nota: Para realizar a redução na quantidade de nós basta refazer o procedimento explicado acima reduzindo o número de nós. 
+  >Nota: Para realizar a redução na quantidade de nós basta refazer o procedimento explicado acima diminuindo o número de nós. 
 #
 ## SingleStore
 
@@ -528,7 +531,7 @@ Feito isso, um cluster com três nós será criado e inicializado. Em alguns mom
     apiGroup: rbac.authorization.k8s.io
   ```
 
-- singlestore-cluster-crd.yaml
+- SingleStore-cluster-crd.yaml
 
   Define um recurso específico MemSQLCluster como um tipo de recurso para ser utilizado pelo Operator.
 
@@ -613,7 +616,7 @@ Feito isso, um cluster com três nós será criado e inicializado. Em alguns mom
 
   > Nota: Neste projeto a imagem utilizada para a criação do container do operator é a `memsql/operator:1.2.3-centos-ef2b8561` disponibilizada no Docker Hub pelo SingleScore.
 
-- singlestore-cluster.yaml 
+- SingleStore-cluster.yaml 
 
   Esta é a configuração principal do nosso cluster, é através deste arquivo que iremos definir se nosso cluster será replicado e também a quantidade de recursos alocados para cada nó.
 
@@ -666,26 +669,26 @@ Feito isso, um cluster com três nós será criado e inicializado. Em alguns mom
   Neste arquivo você precisará fazer algumas alterações:
 
   - Altere o campo `name` para o nome do seu cluster;
-  - Altere o campo `license` e cole a sua [licença do SingleStore](https://portal.singlestore.com/licenses);
+  - Altere o campo `license` e cole a sua [licença do SingleStore](https://portal.SingleStore.com/licenses);
   - Defina no campo `adminHashedPassword` sua senha encriptografada para o usuário `admin`
   O hash existente no arquivo representa a senha `123456`, o qual utilizaremos para esse tutorial. Caso queira criar uma senha utilize o seguinte algoritmo:
   ```python
   from hashlib import sha1
   print("*" + sha1(sha1('secretpass').digest()).hexdigest().upper())
   ```
-  - Altere o campo `redundancyLevel` para `2` caso deseje ativar o recruso de [Alta Disponibilidade](https://docs.singlestore.com/v7.3/guides/cluster-management/high-availability-and-disaster-recovery/managing-high-availability/managing-high-availability/);
+  - Altere o campo `redundancyLevel` para `2` caso deseje ativar o recruso de [Alta Disponibilidade](https://docs.SingleStore.com/v7.3/guides/cluster-management/high-availability-and-disaster-recovery/managing-high-availability/managing-high-availability/);
   - Altere os campos `count` para aumentar ou diminuir a quantidade de nós agregadores ou folha;
   - O campo `height` define a quantidade de núcleos de CPU e memória RAM serão separados para o nó. O valor `1` representa a quantidade recomendada: `8 núcleos CPU e 32GB RAM`. O menor valor possível é `0.5` que representa metade da quantidade recomendada, ou seja, `4 núcleos CPU e 16GB RAM`;
   - Os campos `storageGB` definem a quantidade de armazenamento que será solicitado para cada volume persistente nos nós.
 
-  > Nota: Todos os arquivos .yaml acima também estão disponiveis na [documentação do SingleStore](https://docs.singlestore.com/v7.3/guides/deploy-memsql/self-managed/kubernetes/step-3/).
+  > Nota: Todos os arquivos .yaml acima também estão disponiveis na [documentação do SingleStore](https://docs.SingleStore.com/v7.3/guides/deploy-memsql/self-managed/kubernetes/step-3/).
 
 
 ### 3. Executando o deploy
 
 - Primeiramente precisamos instalar os recursos do memsql
   ```shell
-  $ kubectl apply -f singlestore/operator-rbac.yaml
+  $ kubectl apply -f SingleStore/operator-rbac.yaml
   ```
 
       serviceaccount/memsql-operator created
@@ -695,14 +698,14 @@ Feito isso, um cluster com três nós será criado e inicializado. Em alguns mom
 - Agora instale as definições de recurso para o Operator
 
   ```shell
-  $ kubectl apply -f singlestore/operator-crd.yaml
+  $ kubectl apply -f SingleStore/operator-crd.yaml
   ```
       customresourcedefinition.apiextensions.k8s.io/memsqlclusters.memsql.com created
 
 - Realize o deploy do MemSQL Operator
 
   ```shell
-  $ kubectl apply -f singlestore/operator-deploy.yaml
+  $ kubectl apply -f SingleStore/operator-deploy.yaml
   ```
 
       deployment.apps/memsql-operator created
@@ -718,7 +721,7 @@ Feito isso, um cluster com três nós será criado e inicializado. Em alguns mom
 - Realizar o deploy do cluster MemSQL.
 
   ```shell
-  $ kubectl apply -f singlestore/singlestore-cluster.yaml
+  $ kubectl apply -f SingleStore/SingleStore-cluster.yaml
   ```
       memsqlcluster.memsql.com/memsql-cluster created
 
@@ -993,7 +996,7 @@ Este é o trecho de código que iremos modificar para podermos testar a escalabi
   Para realizar o deploy do cluster com a nova configuração basta realizar o commando `apply` novamente.
 
   ```shell
-  $ kubectl apply -f singlestore/singlestore-cluster.yaml
+  $ kubectl apply -f SingleStore/SingleStore-cluster.yaml
   ```
       memsqlcluster.memsql.com/memsql-cluster configured
 
