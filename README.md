@@ -164,7 +164,7 @@ Feito isso, já temos nosso cluster e nossa aplicação configurados e executand
 #### 3.1. Acesse o bash de uma das pods que estão executando a aplicação
 
 ```shell
-$ kubectl exec -it cockroachdb-2 bash
+$ kubectl exec -it cockroachdb-2 -- bash
 ```
 
 > Nota: Para alterar qual pod voce está acessando basta alterar a parte do comando `cockroachdb-2` para o nome da pod que você deseja acessar.
@@ -225,30 +225,28 @@ A partir deste momento, já é possível executar comandos SQL diretamente em no
       (NULL, 'Pessoa 10', '8743-5', '23985-3', 'CORRENTE', 642154);
   ```
 
-Agora realize um SELECT na tabela para ver seus dados.
+- Agora realize um SELECT na tabela para ver seus dados.
 
-```sql
-SELECT * FROM bank.accounts;
-```
+  ```sql
+  SELECT * FROM bank.accounts;
+  ```
 
-O retorno deve ser
+  O retorno deve ser
 
-    +----+-----------+---------+---------+------------+----------+
-    | id | nome      | agencia | conta   | tipo_conta | saldo    |
-    +----+-----------+---------+---------+------------+----------+
-    |  8 | Pessoa 08 | 9184-9  | 12537-6 | CORRENTE   | 54656700 |
-    |  1 | Pessoa 01 | 5482-3  | 85377-3 | CORRENTE   |    51230 |
-    |  3 | Pessoa 03 | 4235-1  | 12524-2 | CORRENTE   |    30000 |
-    |  6 | Pessoa 06 | 7223-6  | 98431-5 | POUPANA    |   554876 |
-    |  5 | Pessoa 05 | 5144-7  | 90132-8 | CORRENTE   |    84412 |
-    |  7 | Pessoa 07 | 2623-3  | 68232-5 | CORRENTE   | 10000000 |
-    |  2 | Pessoa 02 | 3123-5  | 43176-4 | CORRENTE   |     1500 |
-    |  4 | Pessoa 04 | 2315-3  | 48255-9 | POUPANA    |     4232 |
-    | 10 | Pessoa 10 | 8743-5  | 23985-3 | CORRENTE   |   642154 |
-    |  9 | Pessoa 09 | 5143-5  | 10255-1 | POUPANA    |   974113 |
-    +----+-----------+---------+---------+------------+----------+
-
-
+      +----+-----------+---------+---------+------------+----------+
+      | id | nome      | agencia | conta   | tipo_conta | saldo    |
+      +----+-----------+---------+---------+------------+----------+
+      |  8 | Pessoa 08 | 9184-9  | 12537-6 | CORRENTE   | 54656700 |
+      |  1 | Pessoa 01 | 5482-3  | 85377-3 | CORRENTE   |    51230 |
+      |  3 | Pessoa 03 | 4235-1  | 12524-2 | CORRENTE   |    30000 |
+      |  6 | Pessoa 06 | 7223-6  | 98431-5 | POUPANA    |   554876 |
+      |  5 | Pessoa 05 | 5144-7  | 90132-8 | CORRENTE   |    84412 |
+      |  7 | Pessoa 07 | 2623-3  | 68232-5 | CORRENTE   | 10000000 |
+      |  2 | Pessoa 02 | 3123-5  | 43176-4 | CORRENTE   |     1500 |
+      |  4 | Pessoa 04 | 2315-3  | 48255-9 | POUPANA    |     4232 |
+      | 10 | Pessoa 10 | 8743-5  | 23985-3 | CORRENTE   |   642154 |
+      |  9 | Pessoa 09 | 5143-5  | 10255-1 | POUPANA    |   974113 |
+      +----+-----------+---------+---------+------------+----------+
 
 Agora chegou o momento de realizarmos nossos testes para averiguar a tolerância a falhas e a escalabilidade do CockroachDB.
 #
@@ -269,22 +267,24 @@ Primeiramente vamos verificar como está o dado que desejamos modificar, execute
 SELECT * FROM bank.accounts WHERE nome = 'Pessoa 01';
 ```
 
-O retorno esperado é:
+O retorno deve ser
 
-    COLOCAR A TABELA AQUI 
-    Time: 2ms total (execution 1ms / network 0ms)
-
+    +----+-----------+---------+---------+------------+----------+
+    | id | nome      | agencia | conta   | tipo_conta | saldo    |
+    +----+-----------+---------+---------+------------+----------+
+    |  1 | Pessoa 01 | 5482-3  | 85377-3 | CORRENTE   |    51230 |
+    +----+-----------+---------+---------+------------+----------+
 
 Execute o comando abaixo para realizar a alteração no nó 2. 
 
 ```sql
-UPDATE bank.accounts SET tipo_conta='POUPANÇA' WHERE agencia='5482-3' , conta='85377-3';
+UPDATE bank.accounts SET tipo_conta='POUPANÇA' WHERE nome = 'Pessoa 01';
 ```
 
 E agora acesse o nó 1, repetindo os passos da etapa [3](https://github.com/bernacamargo/PMD-tutorial#3-executando-comandos-sql-na-pod), e após entrar no build-in SQL, execute a consulta abaixo
 
 ```sql
-SELECT * FROM bank.accounts WHERE agencia='5482-3' , conta='85377-3';
+SELECT * FROM bank.accounts WHERE nome = 'Pessoa 01';
 ```
 Como podemos observar, a atualização foi realizada e também foi replicada para as outras pods. Dessa forma podemos realizar este mesmo teste com as outras pods e veremos que todas estão sincronizadas.
 
@@ -336,7 +336,9 @@ Agora altere a última linha que explicita o número de nodes da aplicação e d
 O arquivo alterado deve ficar da seguinte forma:
 
 ```yaml
-...
+.
+.
+.
 tlsEnabled: true
 image:
     name: cockroachdb/cockroach:v20.2.0
