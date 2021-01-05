@@ -4,7 +4,7 @@
 - Bernardo Pinheiro Camargo [@bernacamargo](https://github.com/bernacamargo)
 - Renata Praisler [@RenataPraisler](https://github.com/RenataPraisler)
 
-# 
+#
 
 ## Objetivo
 No contexto de bancos de dados relacionais e distribuídos (NewSQL), temos como objetivo deste projeto planejar e elaborar um tutorial intuitivo que permita a qualquer pessoa interessada testar e validar as características relacionadas a tolerância às falhas e escalabilidade na estrutura de NewSQL.
@@ -21,9 +21,16 @@ O NewSQL surgiu como uma nova proposta, pois com o uso do NOSQL acabou apresenta
 - Cockroachdb;
 - SingleStore;
 
-## 
+## Pré-requisitos
 
-## Cluster Kubernetes
+Antes de começarmos, é necessário que você atente-se à alguns detalhes considerados como pré-requisitos deste tutorial.
+
+- Acesso a internet;
+- Conhecimentos básicos em SQL, Kubernetes, Docker e Google Cloud;
+- Cluster GKE criado e configurado com no minimo 8 núcleos de CPU e 32GB de RAM por nó;
+
+
+## Cluster Kubernetes GKE
 
 Para podermos simular um ambiente isolado e que garanta as características de sistemas distribuídos utilizaremos um cluster local orquestrado pelo Kubernetes, o qual é responsável por gerenciar instâncias de máquinas virtuais para execução de aplicativos em containers. 
 
@@ -37,7 +44,7 @@ Primeiramente precisamos criar nosso cluster e utilizaremos o GKE para isto:
 Feito isso, um cluster com três nós será criado e inicializado. Em alguns momentos você já poderá acessá-lo para seguirmos com as configurações.
 
 > Para ambos os softwares Cockroachdb e SingleStore utilizaremos o mesmo processo para inicialização do cluster kubernetes, porém em clusters diferentes.
-
+> 
 #
 ## Cockroachdb
 
@@ -50,9 +57,15 @@ Para configurar a aplicação do cockroachdb dentro do cluster podemos fazer de 
 
 Neste exemplo utilizaremos o Operator fornecido pelo Cockroachdb, pois ele automatiza a configuração da aplicação e assim não teremos que entrar a fundo em alguns detalhes mais técnicos do Kubernetes.
 
->Nota: É importante notar que temos um cluster kubernetes, composto de três instâncias de máquina virtual (1 master e 2 workers), onde as pods são alocadas e cada pod representa um nó do CockroachDB que está executando. Dessa forma quando falamos sobre os nós do cockroachdb estamos nos referindo as pods e quando falamos dos nós do cluster estamos falando das instâncias de máquina virtual do Kubernetes.
+>Nota: É importante notar que temos um cluster kubernetes, composto de três instâncias de máquina virtual (1 master e 2 workers), onde as pods são alocadas e cada uma representa um nó do CockroachDB que está executando. Dessa forma quando falamos sobre os nós do cockroachdb estamos nos referindo as pods e quando falamos dos nós do cluster estamos falando das instâncias de máquina virtual do Kubernetes.
 
 ### 1. Instalar o Operator no cluster.
+
+- Definir as autorizações para o Operator gerenciar o cluster
+
+  ```shell
+  $ kubectl apply -f cockroachdb/operator-rbac.yaml
+  ```
 
 - Criar o CustomResourceDefinition (CRD) para o Operator
 
@@ -69,7 +82,7 @@ Neste exemplo utilizaremos o Operator fornecido pelo Cockroachdb, pois ele autom
 - Criar o Controller do Operator
 
   ```shell
-  $ kubectl apply -f cockroachdb/deploy.yaml
+  $ kubectl apply -f cockroachdb/operator-deploy.yaml
   ```
       
   O retorno esperado é:
