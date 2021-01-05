@@ -1,24 +1,47 @@
-# NewSQL - Tolerância à falha e escalabilidade com Cockroachdb e SingleStore
+<h1>NewSQL - Tolerância à falha e escalabilidade com Cockroachdb e SingleStore</h1>
 
-#### Autores
+## Autores
 - Bernardo Pinheiro Camargo [@bernacamargo](https://github.com/bernacamargo)
 - Renata Praisler [@RenataPraisler](https://github.com/RenataPraisler)
 
+## Sumário
+- [Autores](#autores)
+- [Sumário](#sumário)
+- [Objetivo](#objetivo)
+- [Introdução](#introdução)
+- [Tecnologias que vamos utilizar](#tecnologias-que-vamos-utilizar)
+- [Pré-requisitos](#pré-requisitos)
+- [Recursos mínimos necessários](#recursos-mínimos-necessários)
+- [Criar um Cluster Kubernetes](#criar-um-cluster-kubernetes)
+- [Cockroachdb](#cockroachdb)
+  - [1. Deploy do Operator](#1-deploy-do-operator)
+  - [2. Deploy do cluster](#2-deploy-do-cluster)
+  - [3. Executando comandos SQL](#3-executando-comandos-sql)
+  - [4. Testes de tolerância a falhas](#4-testes-de-tolerância-a-falhas)
+  - [5. Testes de Escalabilidade](#5-testes-de-escalabilidade)
+- [SingleStore](#singlestore)
+  - [1. Conceitos básicos](#1-conceitos-básicos)
+  - [2. Preparar manifestos para instalar o Operator no cluster](#2-preparar-manifestos-para-instalar-o-operator-no-cluster)
+  - [3. Executando o deploy](#3-executando-o-deploy)
+  - [4. Acessando o Cluster](#4-acessando-o-cluster)
+  - [5. Testes de tolerância à falhas](#5-testes-de-tolerância-à-falhas)
+  - [6. Testes de escalabilidade](#6-testes-de-escalabilidade)
+- [Conclusão](#conclusão)
+   
 #
-
 ## Objetivo
 No contexto de bancos de dados relacionais e distribuídos (NewSQL), temos como objetivo deste projeto planejar e elaborar um tutorial intuitivo que permita a qualquer pessoa interessada testar e validar as características relacionadas a tolerância às falhas e escalabilidade na estrutura de NewSQL.
 
 ## Introdução
 
-O NewSQL surgiu como uma nova proposta, pois com o uso do NOSQL acabou apresentando alguns problemas como por exemplo: a falta, do uso de transações, das consultas SQL e a estrutura complexa por não ter uma modelagem estruturada. Ele veio com o objetivo de ter os os pontos positivos dos do modelo relacional para as arquiteturas distribuídas e aumentar o desempenhos das queries de SQL, não tendo a necessidade de servidores mais potentes para melhor execução, e utilizando a escalabilidade horizontal e mantendo as propriedades ACID(Atomicidade, Consistência, Isolamento e Durabilidade).
+O NewSQL surgiu como uma nova proposta, pois com o uso do NOSQL acabou apresentando alguns problemas como por exemplo: a falta, do uso de transações, das consultas SQL e a estrutura complexa por não ter uma modelagem estruturada. Ele veio com o objetivo de ter os os pontos positivos dos do modelo relacional para as arquiteturas distribuídas e aumentar o desempenhos das queries de SQL, não tendo a necessidade de servidores mais potentes para melhor execução, e utilizando a escalabilidade vertical e mantendo as propriedades ACID(Atomicidade, Consistência, Isolamento e Durabilidade).
 
 ## Tecnologias que vamos utilizar
 
 - Kubernetes;
 - Docker;
 - Google Kubernetes Engine (GKE);
-- Cockroachdb;
+- CockroachDB;
 - SingleStore;
 
 ## Pré-requisitos
@@ -27,28 +50,46 @@ Antes de começarmos, é necessário que você atente-se à alguns detalhes cons
 
 - Acesso a internet;
 - Conhecimentos básicos em SQL, Kubernetes, Docker e Google Cloud;
-- Cluster GKE criado e configurado com no minimo 8 núcleos de CPU e 32GB de RAM por nó;
+- Conta no Google Cloud com créditos;
 
+## Recursos mínimos necessários
 
-## Cluster Kubernetes GKE
+- CockroachDB
+
+      Value	            Recommendation	    Reference
+      RAM per vCPU	        4 GiB	        CPU and memory
+      Capacity per vCPU	    150 GiB	          Storage
+- SingleStore
+  
+  
+## Criar um Cluster Kubernetes
 
 Para podermos simular um ambiente isolado e que garanta as características de sistemas distribuídos utilizaremos um cluster local orquestrado pelo Kubernetes, o qual é responsável por gerenciar instâncias de máquinas virtuais para execução de aplicativos em containers. 
 
-Primeiramente precisamos criar nosso cluster e utilizaremos o GKE para isto:
+Neste projeto utilizaremos o GKE para gerenciar e hospedar nossos dois clusters Kubernetes, contudo é possível realizar o procedimento com qualquer outra vertente de cluster, como AWS, Microsoft Azure ou um cluster local. Atente-se nas configurações mínimas para executar cada aplicação.
+
+Primeiramente precisamos criar nosso cluster no GKE:
 
 - Acesse a [Google Cloud Console](https://console.cloud.google.com)
 - Navegue até o `Kubernetes Engine` e clique em `Clusters`;
 - Clique em `Criar cluster` no centro da janela;
-- Defina o nome do cluster e clique em `Criar`.
+- Defina o nome do cluster;
+- Configure a quantidade de recursos do cluster;
+  - Clique em `Pools dos nós` para expandir o menu;
+  - Clique em `Nós`;
+  - Procure pelo campo `Tipo de máquina` e clique para expandir as opções;
+  -  Agora basta selecionar a opção que contempla os requisitos dos softwares utilizados;
+- Clique em `Criar`.
+  
 
 Feito isso, um cluster com três nós será criado e inicializado. Em alguns momentos você já poderá acessá-lo para seguirmos com as configurações.
 
-> Para ambos os softwares Cockroachdb e SingleStore utilizaremos o mesmo processo para inicialização do cluster kubernetes, porém em clusters diferentes.
-> 
+> Para ambos os softwares Cockroachdb e SingleStore utilizaremos o mesmo processo para inicialização do cluster kubernetes, porém em clusters com configurações diferentes.
+
 #
 ## Cockroachdb
 
-Antes de iniciar o teste para identificar como é realizado a tolerância a falhas e a escalabilidade, temos que configurar o Cockroachdb no nosso cluster, para nos auxiliar utilizamos as documentações do Cockroachdb e kubernetes, e citaremos abaixo os comandos que devem ser realizados.
+Antes de iniciar os testes, temos que configurar o Cockroachdb no nosso cluster e para nos auxiliar utilizamos as documentações do Cockroachdb e kubernetes, e citaremos abaixo os comandos que devem ser realizados.
 
 Para configurar a aplicação do cockroachdb dentro do cluster podemos fazer de algumas formas:
 - [Usando o Operator](https://kubernetes.io/pt/docs/concepts/extend-kubernetes/operator/)
@@ -59,7 +100,7 @@ Neste exemplo utilizaremos o Operator fornecido pelo Cockroachdb, pois ele autom
 
 >Nota: É importante notar que temos um cluster kubernetes, composto de três instâncias de máquina virtual (1 master e 2 workers), onde as pods são alocadas e cada uma representa um nó do CockroachDB que está executando. Dessa forma quando falamos sobre os nós do cockroachdb estamos nos referindo as pods e quando falamos dos nós do cluster estamos falando das instâncias de máquina virtual do Kubernetes.
 
-### 1. Instalar o Operator no cluster.
+### 1. Deploy do Operator
 
 - Definir as autorizações para o Operator gerenciar o cluster
 
@@ -104,7 +145,7 @@ Neste exemplo utilizaremos o Operator fornecido pelo Cockroachdb, pois ele autom
 
   > Nota: Caso o status da pod estiver como "ContainerCreating" é só aguardar alguns instantes que o kubernetes esta iniciando o container e logo deverá aparecer como "Running".
 
-### 2. Configuração do cluster cockroachdb.
+### 2. Deploy do cluster
   
 - Abra o arquivo `cockroachdb-cluster.yaml` com um editor de texto, vamos configurar a quantidade de CPU e memoria para cada pod do cluster. Basta procurar no arquivo pelo código abaixo, descomentar as linhas e alterar os valores de `cpu` e `memory` para os que desejar.
 
@@ -159,7 +200,7 @@ Neste exemplo utilizaremos o Operator fornecido pelo Cockroachdb, pois ele autom
       cockroachdb-2                         1/1     Running   0          67sa
       
 
-### 3. Executando comandos SQL na pod.
+### 3. Executando comandos SQL
 
 Feito isso, já temos nosso cluster e nossa aplicação configurados e executando, temos que popular nosso banco de dados para realizar os testes. 
 
@@ -171,7 +212,7 @@ Feito isso, já temos nosso cluster e nossa aplicação configurados e executand
 
   > Nota: Para alterar qual pod voce está acessando basta alterar a parte do comando `cockroachdb-2` para o nome da pod que você deseja acessar.
 
-  #### 3.2. Dentro da pod inicialize o [build-in SQL client](https://www.cockroachlabs.com/docs/v20.2/cockroach-sql) do cockroach
+- Dentro da pod inicialize o [build-in SQL client](https://www.cockroachlabs.com/docs/v20.2/cockroach-sql) do cockroach
 
   ```shell
   $ cockroach sql --certs-dir cockroach-certs
@@ -253,6 +294,7 @@ Feito isso, já temos nosso cluster e nossa aplicação configurados e executand
       +----+-----------+---------+---------+------------+----------+
 
 Agora chegou o momento de realizarmos nossos testes para averiguar a tolerância a falhas e a escalabilidade do CockroachDB.
+
 #
 ### 4. Testes de tolerância a falhas
 
@@ -285,7 +327,7 @@ Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na
   UPDATE bank.accounts SET tipo_conta='POUPANÇA' WHERE nome = 'Pessoa 01';
   ```
 
-  E agora acesse o nó 1, repetindo os passos da etapa [3](https://github.com/bernacamargo/PMD-tutorial#3-executando-comandos-sql-na-pod), e após entrar no build-in SQL, execute a consulta abaixo
+  Agora acesse o nó 1, repetindo os passos da etapa [3](https://github.com/bernacamargo/PMD-tutorial#3-executando-comandos-sql-na-pod), e após entrar no build-in SQL, execute a consulta abaixo
 
   ```sql
   SELECT * FROM bank.accounts WHERE nome = 'Pessoa 01';
@@ -324,9 +366,9 @@ Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na
       NAME            READY     STATUS    RESTARTS   AGE
       cockroachdb-2   1/1       Running   0          15s
   
-### 5 Testes de Escalabilidade
+### 5. Testes de Escalabilidade
 
-O NewSQL utiliza a escalabilidade horizontal, que consiste em utilizar mais equipamentos e existe a partionalização dos dados de acordo com os critérios de cada projeto, diferente do vertical, que consiste em aumentar a capacidade da máquina, porém no horizontal também temos o aumento de capacidade de memória e de processamento, mas isso terá o impacto pela soma das máquinas em funcionamento. 
+Para o escalonamento do nosso cluster, utilizaremos a escalabilidade horizontal, que consiste em utilizar mais equipamentos e existe a partionalização dos dados de acordo com os critérios de cada projeto, diferente do vertical, que consiste em aumentar a capacidade da máquina, porém no horizontal também temos o aumento de capacidade de memória e de processamento, mas isso terá o impacto pela soma das máquinas em funcionamento. 
 
 Para entender o motivo que precisamos realizar este escalomamento, vamos supor que existe uma necessidade de processamento maior dos dados num período de tempo, como por exemplo a black friday (data em novemembro em que o comércio realiza descontos em cima de produtos), para isso seja necessário um aumento de quantidade de máquina para que não tenha impacto no processamento para o cliente final, mas em outras datas não tenha o mesmo volume de acesso, então podemos reduzir também nossas pods para que tenha uma redução no valor de processamento. 
 
@@ -391,6 +433,8 @@ Todas essas ações são necessários estudos e estragégias que vão depender d
   >Nota: Para realizar a redução na quantidade de nós basta refazer o procedimento explicado acima reduzindo o número de nós. 
 #
 ## SingleStore
+
+Nesta etapa vamos definir e executar as configurações de deploy do SingleStore em um cluster Kubernetes gerenciado pelo GKE, para assim podermos realizar os testes de escalabilidade e tolerância a falhas.
 
 ### 1. Conceitos básicos
 Primeiramente precisamos criar nosso cluster e utilizaremos o GKE para isto:
@@ -637,7 +681,7 @@ Feito isso, um cluster com três nós será criado e inicializado. Em alguns mom
   > Nota: Todos os arquivos .yaml acima também estão disponiveis na [documentação do SingleStore](https://docs.singlestore.com/v7.3/guides/deploy-memsql/self-managed/kubernetes/step-3/).
 
 
-### 3. Fazendo o deploy
+### 3. Executando o deploy
 
 - Primeiramente precisamos instalar os recursos do memsql
   ```shell
@@ -877,11 +921,13 @@ Diferentemente do cockroach, em que configuramos um cluster totalmente replicado
 #
 ### 6. Testes de escalabilidade
 
-O NewSQL utiliza a escalabilidade horizontal, que consiste em utilizar mais equipamentos e existe a partionalização dos dados de acordo com os critérios de cada projeto, diferente do vertical, que consiste em aumentar a capacidade da máquina, porém no horizontal também temos o aumento de capacidade de memória e de processamento, mas isso terá o impacto pela soma das máquinas em funcionamento. 
+O escalonamento do cluster será executado baseado no conceito de escalabilidade vertical. Este conceito representa o aumentar a capacidade dos recursos de uma mesma máquina. Em nosso contexto a escalabilidade vertical vai ser aplicada através da manipulação da quantidade de instâncias do banco de dados(pods).
 
-Como fizemos o deploy do cluster SingleStore utilizando um Operator, toda escalabilidade será feita alterando o arquivo de configuração do cluster e realizando seu deploy novamente. 
+<!-- Para o escalonamento do nosso cluster, utilizaremos a escalabilidade horizontal, que consiste em utilizar mais equipamentos e existe a partionalização dos dados de acordo com os critérios de cada projeto, diferente do vertical, que consiste em aumentar a capacidade da máquina, porém no horizontal também temos o aumento de capacidade de memória e de processamento, mas isso terá o impacto pela soma das máquinas em funcionamento.  -->
 
-Primeiramente precisamos abrir o arquivo `singlestore-cluster.yaml`, pois é neste que iremos realizar as configurações de escalabilidade de nosso cluster.
+Como fizemos o deploy do cluster SingleStore utilizando um Operator, toda escalabilidade será realizada modificando o arquivo de configuração do cluster e realizando seu deploy novamente.
+
+Primeiramente precisamos abrir o arquivo `singlestore-cluster.yaml`, pois é neste que iremos realizar as configurações de escalabilidade.
 
 ```yaml
 .
@@ -920,6 +966,8 @@ Primeiramente precisamos abrir o arquivo `singlestore-cluster.yaml`, pois é nes
       labels:
         optional: label
 ```
+Este é o trecho de código que iremos modificar para podermos testar a escalabilidade do cluster. A seguir temos as opções disponíveis:
+
 - Alta Disponibilidade:
   
   No inicio temos o campo `redundancyLevel`, este é responsável por ativar a `Alta Disponibilidade`, que irá criar no mesmo cluster outro conjunto de nós agregadores que atuaram apenas como replicas do primeiro conjunto de nós. Neste tutorial não iremos abordar esta função, pois será necessário uma infraestrutura muito mais potente.
@@ -947,7 +995,7 @@ Primeiramente precisamos abrir o arquivo `singlestore-cluster.yaml`, pois é nes
   ```shell
   $ kubectl apply -f singlestore/singlestore-cluster.yaml
   ```
-      memsqlcluster.memsql.com/memsql-cluster created
+      memsqlcluster.memsql.com/memsql-cluster configured
 
 ## Conclusão
 
