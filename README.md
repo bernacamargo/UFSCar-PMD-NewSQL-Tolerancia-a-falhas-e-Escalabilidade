@@ -773,34 +773,33 @@ FIELDS TERMINATED BY ',';
 
 Relembrando o objetivo da tolerância à falhas, ela impede que alguma mudança da nossa base de dados seja perdida por conta de algum problema, com isso é realizado o método de replicação para que todos os nós tenham as mudanças realizadas, e assim caso um nó tenha algum problema, o outro nó do sistema terá as informações consistentes. 
 
-Sabendo disso, vamos simular alguns casos para você perceber o este funcionamento. 
-Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na prática.
+Sabendo disso, vamos simular alguns casos para você perceber o este funcionamento, antes de simular uma falha do nó, vamos passar pelo conceito da replicação na prática.
 
-Diferentemente do cockroach, em que configuramos um cluster totalmente replicado, no SingleStore temos um cluster gerenciado pelo nó master e seus dados armazenados e particionados em seus nós folha. Dessa forma só devemos realizar o acesso diretamente ao nó master para que ele gerencie a forma de armazenar os dados.
+Diferentemente do cockroach, em que configuramos um cluster totalmente replicado, no SingleStore temos um cluster gerenciado pelo nó master e seus dados armazenados e particionados em seus nós folha. Dessa forma só devemos realizar as operações de dados no nosso nó master, e assim a partição será realizada nas folhas através dos nossos agregadores, assim qualquer consulta que é feita pelo nó master, é processados pelos nós folhas. Isso ficará mais claro na prática, que demostraremos abaixo.
 
-### 5.1 Replicação de dados nos nós.
-```sql
- ****
-```
-#### 5.2 Simulando a falha de uma pod.
+
+#### 5.1 Simulando a falha de uma pod.
    
-Vamos deletar um nó do MemSQL utilizando o comando abaixo:
+Após nos termos populado nosso banco pelo nosso nó master, nós vamos deletar o nosso nó master com o comando abaixo:
    
 ```shell
-$ kubectl delete pods node-memsql-cluster-leaf-ag1-1
+$ kubectl delete pods node-memsql-cluster-master-0
 ```
 
 Você terá o retorno que o nó foi deletado.  
 
-    pod "node-memsql-cluster-leaf-ag1-1" deleted
+    pod "node-memsql-cluster-master-0" deleted
 
-Então quando deletamos o nó, o Kubernets irá verificar que o nó teve uma falha, e automaticamente reiciciará a pod e atualizará os dados baseados nos outros nós.
-
-Executando esse comando no terminal, verificamos que a pod já foi reiniciada e esta com o **status: Running**. 
+Então quando deletamos o nó, o Kubernets irá reiniciar o nó baseados nos nós folhas, ou seja, irá recriar o banco atraves das partições, então se rodarmos esse comando no terminal, verificamos que a pod já foi reiniciada e esta com o **status: Running**. 
         
 ```shell
 $ kubectl get pods
 ```
+
+E podemos acessar o banco de dados no nó master e verificar que a nossa base de dados está atualizada. 
+'''
+colocar os bagulhos aqui 
+'''
 
 ### 6. Testes de escalabilidade
 #
