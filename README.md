@@ -38,6 +38,7 @@ Feito isso, um cluster com três nós será criado e inicializado. Em alguns mom
 
 > Para ambos os softwares Cockroachdb e SingleStore utilizaremos o mesmo processo para inicialização do cluster kubernetes, porém em clusters diferentes.
 
+#
 ## Cockroachdb
 
 Antes de iniciar o teste para identificar como é realizado a tolerância a falhas e a escalabilidade, temos que configurar o Cockroachdb no nosso cluster, para nos auxiliar utilizamos as documentações do Cockroachdb e kubernetes, e citaremos abaixo os comandos que devem ser realizados.
@@ -53,109 +54,109 @@ Neste exemplo utilizaremos o Operator fornecido pelo Cockroachdb, pois ele autom
 
 ### 1. Instalar o Operator no cluster.
 
-1.1. Criar o CustomResourceDefinition (CRD) para o Operator
+- Criar o CustomResourceDefinition (CRD) para o Operator
 
-```shell
-$ kubectl apply -f https://raw.githubusercontent.com/cockroachdb/cockroach-operator/master/config/crd/bases/crdb.cockroachlabs.com_crdbclusters.yaml
-```
+  ```shell
+  $ kubectl apply -f https://raw.githubusercontent.com/cockroachdb/cockroach-operator/master/config/crd/bases/crdb.cockroachlabs.com_crdbclusters.yaml
+  ```
 
-O retorno esperado é:
+  O retorno esperado é:
 
-    customresourcedefinition.apiextensions.k8s.io/crdbclusters.crdb.cockroachlabs.com created
+      customresourcedefinition.apiextensions.k8s.io/crdbclusters.crdb.cockroachlabs.com created
 
-> Nota: É interessante notar que o operator irá ser executado como uma pod do cluster.
+  > Nota: É interessante notar que o operator irá ser executado como uma pod do cluster.
 
-1.2. Criar o Controller do Operator
+- Criar o Controller do Operator
 
-```shell
-$ kubectl apply -f https://raw.githubusercontent.com/cockroachdb/cockroach-operator/master/manifests/operator.yaml
-```
-    
-O retorno esperado é:
+  ```shell
+  $ kubectl apply -f https://raw.githubusercontent.com/cockroachdb/cockroach-operator/master/manifests/operator.yaml
+  ```
+      
+  O retorno esperado é:
 
-    clusterrole.rbac.authorization.k8s.io/cockroach-operator-role created
-    serviceaccount/cockroach-operator-default created
-    clusterrolebinding.rbac.authorization.k8s.io/cockroach-operator-default created
-    deployment.apps/cockroach-operator created
+      clusterrole.rbac.authorization.k8s.io/cockroach-operator-role created
+      serviceaccount/cockroach-operator-default created
+      clusterrolebinding.rbac.authorization.k8s.io/cockroach-operator-default created
+      deployment.apps/cockroach-operator created
 
-1.3. Validar se o Operator está executando
+- Validar se o Operator está executando
 
-```shell
-$ kubectl get pods
-``` 
-Caso tenha funcionado, você deverá ter como retorno a seguinte mensagem:
+  ```shell
+  $ kubectl get pods
+  ``` 
+  Caso tenha funcionado, você deverá ter como retorno a seguinte mensagem:
 
-    NAME                                 READY   STATUS    RESTARTS   AGE
-    cockroach-operator-6867445556-9x6zp   1/1    Running      0      2m51s
+      NAME                                 READY   STATUS    RESTARTS   AGE
+      cockroach-operator-6867445556-9x6zp   1/1    Running      0      2m51s
 
-> Nota: Caso o status da pod estiver como "ContainerCreating" é só aguardar alguns instantes que o kubernetes esta iniciando o container e logo deverá aparecer como "Running".
+  > Nota: Caso o status da pod estiver como "ContainerCreating" é só aguardar alguns instantes que o kubernetes esta iniciando o container e logo deverá aparecer como "Running".
 
 ### 2. Configuração da aplicação do cockroachdb.
 
-2.1. Realize o download e a edição do arquivo `example.yaml`, este é responsável por realizar a configuração básica de uma aplicação do cockroachdb através do Operator.
+-  Realize o download e a edição do arquivo `example.yaml`, este é responsável por realizar a configuração básica de uma aplicação do cockroachdb através do Operator.
   
-```shell
-$ curl -O https://raw.githubusercontent.com/cockroachdb/cockroach-operator/master/examples/example.yaml
-```
+    ```shell
+    $ curl -O https://raw.githubusercontent.com/cockroachdb/cockroach-operator/master/examples/example.yaml
+    ```
 
-Utilize o `vim`(ou qualquer editor de texto de sua preferência) para abrir o arquivo baixado na etapa anterior.
+    Utilize o `vim`(ou qualquer editor de texto de sua preferência) para abrir o arquivo baixado na etapa anterior.
 
-```shell
-$ vim example.yaml
-```
+    ```shell
+    $ vim example.yaml
+    ```
   
-2.2. Com o arquivo aberto no editor de texto, vamos configurar a quantidade de CPU e memoria para cada pod do cluster. Basta procurar no arquivo baixado pelo código abaixo, descomentar as linhas e alterar os valores de `cpu` e `memory` para os que desejar.
+- Com o arquivo aberto no editor de texto, vamos configurar a quantidade de CPU e memoria para cada pod do cluster. Basta procurar no arquivo baixado pelo código abaixo, descomentar as linhas e alterar os valores de `cpu` e `memory` para os que desejar.
 
-```yaml
-resources:
-    requests:
-        cpu: "2"
-        memory: "8Gi"
-        
-    limits:
-        cpu: "2"
-        memory: "8Gi"
-```
+  ```yaml
+  resources:
+      requests:
+          cpu: "2"
+          memory: "8Gi"
+          
+      limits:
+          cpu: "2"
+          memory: "8Gi"
+  ```
 
-> Nota: Caso não defina nenhum valor inicial a aplicação extendera seus limites de uso de cpu/memoria até o limite do nó do cluster. 
+  > Nota: Caso não defina nenhum valor inicial a aplicação extendera seus limites de uso de cpu/memoria até o limite do nó do cluster. 
 
-> Nota: Essa etapa é opicional e contudo é recomendada em ambientes de produção, visto que limitar o uso de recurso na aplicação pode evitar um desperdício de recurso.
-        
-2.3. Modifique a quantidade de armazenamento cada pod terá, altere para quantos GigaBytes você desejar.
-```yaml
-resources:
-    requests:
-        storage: "1Gi"
-```
+  > Nota: Essa etapa é opicional e contudo é recomendada em ambientes de produção, visto que limitar o uso de recurso na aplicação pode evitar um desperdício de recurso.
+          
+- Modifique a quantidade de armazenamento cada pod terá, altere para quantos GigaBytes você desejar.
+  ```yaml
+  resources:
+      requests:
+          storage: "1Gi"
+  ```
 
-> Nota: caso você queira outra configuração para outro teste ou projeto, se atente de verificar as [configurações recomendadas para a execução da aplicação cockroachdb](https://www.cockroachlabs.com/docs/v20.2/recommended-production-settings#hardware).
+  > Nota: caso você queira outra configuração para outro teste ou projeto, se atente de verificar as [configurações recomendadas para a execução da aplicação cockroachdb](https://www.cockroachlabs.com/docs/v20.2/recommended-production-settings#hardware).
 
-2.4. Aplique as configurações feitas no arquivo `example.yaml`.
+- Aplique as configurações feitas no arquivo `example.yaml`.
 
-```shell
-$ kubectl apply -f example.yaml
-```
+  ```shell
+  $ kubectl apply -f example.yaml
+  ```
 
-O retorno esperado é:
+  O retorno esperado é:
 
-    crdbcluster.crdb.cockroachlabs.com/cockroachdb created    
+      crdbcluster.crdb.cockroachlabs.com/cockroachdb created    
 
-> Nota: Este arquivo irá solicitar para o Operador que crie uma aplicação StatefulSet com três pods que funcionarão como um cluster cockroachdb.
+  > Nota: Este arquivo irá solicitar para o Operador que crie uma aplicação StatefulSet com três pods que funcionarão como um cluster cockroachdb.
 
-2.5. Aguarde alguns minutos e verifique se as pods estão sendo executadas.
+- Aguarde alguns minutos e verifique se as pods estão sendo executadas.
 
-```shell
-$ kubectl get pods
-```
+  ```shell
+  $ kubectl get pods
+  ```
 
-O retorno esperado é:
+  O retorno esperado é:
 
-    NAME                                  READY   STATUS    RESTARTS   AGE
-    cockroach-operator-6867445556-9x6zp   1/1     Running   0          43m
-    cockroachdb-0                         1/1     Running   0          2m29s
-    cockroachdb-1                         1/1     Running   0          104s
-    cockroachdb-2                         1/1     Running   0          67sa
-    
+      NAME                                  READY   STATUS    RESTARTS   AGE
+      cockroach-operator-6867445556-9x6zp   1/1     Running   0          43m
+      cockroachdb-0                         1/1     Running   0          2m29s
+      cockroachdb-1                         1/1     Running   0          104s
+      cockroachdb-2                         1/1     Running   0          67sa
+      
 
 ### 3. Executando comandos SQL na pod.
 
