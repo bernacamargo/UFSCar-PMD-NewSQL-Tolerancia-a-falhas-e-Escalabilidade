@@ -190,59 +190,65 @@ root@:26257/defaultdb>
 
 A partir deste momento, já é possível executar comandos SQL diretamente em nossas aplicações do cockroachdb.
 
-#### 3.3. Crie o banco de dados.
+#### 3.3. Criando o banco e populando os dados
 
-```sql
-CREATE DATABASE commic_book;
-```
+- Crie o banco de dados chamado `bank`
 
-#### 3.4. Popular a base de dados
+  ```sql
+  CREATE DATABASE bank;
+  ```
 
-Agora vamos importar a nossa base antes de iniciar os testes, e para isso utilizaremos o arquivo [marvel.csv](https://raw.githubusercontent.com/bernacamargo/PMD-tutorial/main/marvel.csv).
+- Crie uma tabela chamada `bank.accounts`
 
-```sql
-IMPORT TABLE commic_book.marvel (
-    url STRING,
-    name_alias STRING,
-    appearances STRING,
-    current STRING,
-    gender STRING,
-    probationary STRING,
-    full_reserve STRING,
-    years STRING,
-    years_since_joining STRING,
-    honorary STRING,
-    death1 STRING,
-    return1 STRING,
-    death2 STRING,
-    return2 STRING,
-    death3 STRING,
-    return3 STRING,
-    death4 STRING,
-    return4 STRING,
-    death5 STRING,
-    return5 STRING,
-    notes STRING
-)
-CSV DATA ("https://raw.githubusercontent.com/bernacamargo/PMD-tutorial/main/marvel.csv")
-;
-```
+  ```sql
+  CREATE TABLE bank.accounts (
+      id          int             NOT NULL    AUTO_INCREMENT,
+      nome        VARCHAR(255)    NOT NULL,
+      agencia     VARCHAR(15)     NOT NULL,
+      conta       VARCHAR(15)     NOT NULL,
+      tipo_conta  VARCHAR(50)     NOT NULL,
+      saldo       FLOAT           NOT NULL,
+      PRIMARY KEY (id)
+  );
 
-Caso a importação não encontre nenhum problema, o retorno esperado deve ser:
-
-            job_id       |  status   | fraction_completed | rows | index_entries | bytes
-    ---------------------+-----------+--------------------+------+---------------+--------
-    619735075436953602 | succeeded |                  1 |  159 |             0 | 31767
-    (1 row)
-
-    Time: 617ms total (execution 617ms / network 0ms)
-
+  INSERT INTO bank.accounts(id, nome, agencia, conta, tipo_conta, saldo) 
+  VALUES 
+      (NULL, 'Pessoa 01', '5482-3', '85377-3', 'CORRENTE', 51230),
+      (NULL, 'Pessoa 02', '3123-5', '43176-4', 'CORRENTE', 1500),
+      (NULL, 'Pessoa 03', '4235-1', '12524-2', 'CORRENTE', 30000),
+      (NULL, 'Pessoa 04', '2315-3', '48255-9', 'POUPANÇA', 4232),
+      (NULL, 'Pessoa 05', '5144-7', '90132-8', 'CORRENTE', 84412),
+      (NULL, 'Pessoa 06', '7223-6', '98431-5', 'POUPANÇA', 554876),
+      (NULL, 'Pessoa 07', '2623-3', '68232-5', 'CORRENTE', 10000000),
+      (NULL, 'Pessoa 08', '9184-9', '12537-6', 'CORRENTE', 54656654),
+      (NULL, 'Pessoa 09', '5143-5', '10255-1', 'POUPANÇA', 974113),
+      (NULL, 'Pessoa 10', '8743-5', '23985-3', 'CORRENTE', 642154);
+  ```
 
 Agora realize um SELECT na tabela para ver seus dados.
 
 ```sql
-SELECT * FROM commic_book.marvel;
+SELECT * FROM bank.accounts;
 ```
+
+O retorno deve ser
+
+    +----+-----------+---------+---------+------------+----------+
+    | id | nome      | agencia | conta   | tipo_conta | saldo    |
+    +----+-----------+---------+---------+------------+----------+
+    |  8 | Pessoa 08 | 9184-9  | 12537-6 | CORRENTE   | 54656700 |
+    |  1 | Pessoa 01 | 5482-3  | 85377-3 | CORRENTE   |    51230 |
+    |  3 | Pessoa 03 | 4235-1  | 12524-2 | CORRENTE   |    30000 |
+    |  6 | Pessoa 06 | 7223-6  | 98431-5 | POUPANA    |   554876 |
+    |  5 | Pessoa 05 | 5144-7  | 90132-8 | CORRENTE   |    84412 |
+    |  7 | Pessoa 07 | 2623-3  | 68232-5 | CORRENTE   | 10000000 |
+    |  2 | Pessoa 02 | 3123-5  | 43176-4 | CORRENTE   |     1500 |
+    |  4 | Pessoa 04 | 2315-3  | 48255-9 | POUPANA    |     4232 |
+    | 10 | Pessoa 10 | 8743-5  | 23985-3 | CORRENTE   |   642154 |
+    |  9 | Pessoa 09 | 5143-5  | 10255-1 | POUPANA    |   974113 |
+    +----+-----------+---------+---------+------------+----------+
+
+
 
 Agora chegou o momento de realizarmos nossos testes para averiguar a tolerância a falhas e a escalabilidade do CockroachDB.
 #
@@ -257,10 +263,10 @@ Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na
 
 #### 4.1. Replicação de dados
 
-Primeiramente vamos verificar como está o dado que desejamos modificar, execute o seguinte comando SQL para busca-lo na tabela `marvel`.
+Primeiramente vamos verificar como está o dado que desejamos modificar, execute o seguinte comando SQL para busca-lo na tabela `accounts`.
 
 ```sql
-SELECT url, name_alias FROM commic_book.marvel WHERE url='http://marvel.wikia.com/Anthony_Stark_(Earth-616)';
+SELECT * FROM bank.accounts WHERE nome = 'Pessoa 01';
 ```
 
 O retorno esperado é:
