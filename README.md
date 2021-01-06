@@ -460,6 +460,8 @@ Todas essas ações são necessários estudos e estragégias que vão depender d
 
 Nesta etapa vamos definir e executar as configurações de deploy do SingleStore em um cluster Kubernetes gerenciado pelo GKE, para assim podermos realizar os testes de escalabilidade e tolerância a falhas.
 
+> Nota: importante se atentar que a estrutura é composta em dois níveis: nós agregadores e nós folhas.
+
 ### 1. Conceitos básicos
 Primeiramente precisamos criar nosso cluster e utilizaremos o GKE para isto:
 
@@ -921,7 +923,11 @@ Este é o trecho de código que iremos modificar para podermos testar a escalabi
 
 Antes da escolha dos softawares que usariamos dentro deste projeto, nos realizamos um benchmark para escolher o que mais se encaixava, com isso nós levantamos algumas coisas que seriam essenciais que foram: uma boa documentação que contesse vídeos e bons exemplos, gratuitos ou até mesmo com um valor alto de créditos para testes iniciais e gostariamos que os softwares entre si tivessem alguma diferência significativa. 
 
-Após esses critérios criados, nos escolhemos 
+Após esses critérios criados, nos escolhemos o cockroachdb e o single store(antigo MemSQL).
+
+O cockroachdb nos chamou atenção por ser um banco de dados open-source e possui em sua versão gratuita *Core*. O banco tem como objetivo rodar em um computador pessoal comum, ser consistente e escalável, mas ele não utiliza o armazenamento em memória principal, ele utiliza a estrutura de *clocks* atômicos e possui outras camadas de estrutura: *SQL Layer*, *Transaction Layer* (que garante as propriedades **ACID**), *Distribution Layer*, *Replication Layer* e *Storage Layer*. 
+
+Já o MemSQL já nos chamou atenção, pois diferente do cockroachdb, ele tem o armazenamento na memória principal e sua estrutura é composta em dois níveis: nós agregadores e nós folhas, porém ela contem algumas barreiras na questão gratuita, isso porque a versão *Developer* não é recomendada para ambientes de produção e possui algumas limitações de recursos, e também possui uma dependência de uma infraestrutura com grande poder de processamento. 
 
 ## Conclusão
 
