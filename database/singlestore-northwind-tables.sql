@@ -88,17 +88,7 @@ CREATE TABLE IF NOT EXISTS `northwind`.`employee_privileges` (
   PRIMARY KEY (`employee_id`, `privilege_id`),
   INDEX `employee_id` (`employee_id` ASC),
   INDEX `privilege_id` (`privilege_id` ASC),
-  INDEX `privilege_id_2` (`privilege_id` ASC),
-  CONSTRAINT `fk_employee_privileges_employees1`
-    FOREIGN KEY (`employee_id`)
-    REFERENCES `northwind`.`employees` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_employee_privileges_privileges1`
-    FOREIGN KEY (`privilege_id`)
-    REFERENCES `northwind`.`privileges` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+  INDEX `privilege_id_2` (`privilege_id` ASC))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
 
@@ -199,32 +189,7 @@ CREATE TABLE IF NOT EXISTS `northwind`.`orders` (
   INDEX `id` (`id` ASC),
   INDEX `shipper_id` (`shipper_id` ASC),
   INDEX `tax_status` (`tax_status_id` ASC),
-  INDEX `ship_zip_postal_code` (`ship_zip_postal_code` ASC),
-  CONSTRAINT `fk_orders_customers`
-    FOREIGN KEY (`customer_id`)
-    REFERENCES `northwind`.`customers` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_orders_employees`
-    FOREIGN KEY (`employee_id`)
-    REFERENCES `northwind`.`employees` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_orders_shippers`
-    FOREIGN KEY (`shipper_id`)
-    REFERENCES `northwind`.`shippers` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_orders_orders_tax_status`
-    FOREIGN KEY (`tax_status_id`)
-    REFERENCES `northwind`.`orders_tax_status` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_orders_orders_status`
-    FOREIGN KEY (`status_id`)
-    REFERENCES `northwind`.`orders_status` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+  INDEX `ship_zip_postal_code` (`ship_zip_postal_code` ASC))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
 
@@ -320,22 +285,7 @@ CREATE TABLE IF NOT EXISTS `northwind`.`purchase_orders` (
   PRIMARY KEY (`id`),
   INDEX `created_by` (`created_by` ASC),
   INDEX `status_id` (`status_id` ASC),
-  INDEX `supplier_id` (`supplier_id` ASC),
-  CONSTRAINT `fk_purchase_orders_employees`
-    FOREIGN KEY (`created_by`)
-    REFERENCES `northwind`.`employees` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_purchase_orders_purchase_order_status`
-    FOREIGN KEY (`status_id`)
-    REFERENCES `northwind`.`purchase_order_status` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_purchase_orders_suppliers`
-    FOREIGN KEY (`supplier_id`)
-    REFERENCES `northwind`.`suppliers` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+  INDEX `supplier_id` (`supplier_id` ASC))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
 
@@ -357,27 +307,7 @@ CREATE TABLE IF NOT EXISTS `northwind`.`inventory_transactions` (
   INDEX `customer_order_id` (`customer_order_id` ASC),
   INDEX `product_id` (`product_id` ASC),
   INDEX `purchase_order_id` (`purchase_order_id` ASC),
-  INDEX `transaction_type` (`transaction_type` ASC),
-  CONSTRAINT `fk_inventory_transactions_orders`
-    FOREIGN KEY (`customer_order_id`)
-    REFERENCES `northwind`.`orders` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_inventory_transactions_products`
-    FOREIGN KEY (`product_id`)
-    REFERENCES `northwind`.`products` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_inventory_transactions_purchase_orders`
-    FOREIGN KEY (`purchase_order_id`)
-    REFERENCES `northwind`.`purchase_orders` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_inventory_transactions_inventory_transaction_types`
-    FOREIGN KEY (`transaction_type`)
-    REFERENCES `northwind`.`inventory_transaction_types` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+  INDEX `transaction_type` (`transaction_type` ASC))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
 
@@ -395,12 +325,7 @@ CREATE TABLE IF NOT EXISTS `northwind`.`invoices` (
   `amount_due` DECIMAL(19,4) NULL DEFAULT '0.0000',
   PRIMARY KEY (`id`),
   INDEX `id` (`id` ASC),
-  INDEX `fk_invoices_orders1_idx` (`order_id` ASC),
-  CONSTRAINT `fk_invoices_orders`
-    FOREIGN KEY (`order_id`)
-    REFERENCES `northwind`.`orders` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+  INDEX `fk_invoices_orders1_idx` (`order_id` ASC))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
 
@@ -436,22 +361,7 @@ CREATE TABLE IF NOT EXISTS `northwind`.`order_details` (
   INDEX `product_id` (`product_id` ASC),
   INDEX `purchase_order_id` (`purchase_order_id` ASC),
   INDEX `fk_order_details_orders_idx` (`order_id` ASC),
-  INDEX `fk_order_details_order_details_status_idx` (`status_id` ASC),
-  CONSTRAINT `fk_order_details_orders`
-    FOREIGN KEY (`order_id`)
-    REFERENCES `northwind`.`orders` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_order_details_products`
-    FOREIGN KEY (`product_id`)
-    REFERENCES `northwind`.`products` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_order_details_order_details_status`
-    FOREIGN KEY (`status_id`)
-    REFERENCES `northwind`.`order_details_status` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+  INDEX `fk_order_details_order_details_status_idx` (`status_id` ASC))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
 
@@ -472,22 +382,7 @@ CREATE TABLE IF NOT EXISTS `northwind`.`purchase_order_details` (
   INDEX `id` (`id` ASC),
   INDEX `inventory_id` (`inventory_id` ASC),
   INDEX `purchase_order_id` (`purchase_order_id` ASC),
-  INDEX `product_id` (`product_id` ASC),
-  CONSTRAINT `fk_purchase_order_details_inventory_transactions`
-    FOREIGN KEY (`inventory_id`)
-    REFERENCES `northwind`.`inventory_transactions` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_purchase_order_details_products`
-    FOREIGN KEY (`product_id`)
-    REFERENCES `northwind`.`products` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_purchase_order_details_purchase_orders`
-    FOREIGN KEY (`purchase_order_id`)
-    REFERENCES `northwind`.`purchase_orders` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+  INDEX `product_id` (`product_id` ASC))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
 
