@@ -16,7 +16,7 @@
 - [Criar um Cluster Kubernetes](#criar-um-cluster-kubernetes)
 - [CockroachDB](#cockroachdb)
   - [1. Deploy do Operator](#1-deploy-do-operator)
-  - [2. Deploy do cluster1](#2-deploy-do-cluster1)
+  - [2. Deploy do cluster](#2-deploy-do-cluster)
   - [3. Executando comandos SQL](#3-executando-comandos-sql)
   - [4. Testes de tolerância a falhas](#4-testes-de-tolerância-a-falhas)
   - [5. Testes de Escalabilidade](#5-testes-de-escalabilidade)
@@ -430,7 +430,7 @@ Primeiramente precisamos criar nosso cluster e utilizaremos o GKE para isto:
 
 Feito isso, um cluster com três nós será criado e inicializado. Em alguns momentos você já poderá acessá-lo para seguirmos com as configurações.
 
-> Nota: o teste foi realizaado com o cluster com as configurações mínimas para rodar o software e que os testes serem realizadas. 
+> Nota: o teste foi realizado com o cluster com as configurações mínimas para rodar o software e que os testes serem realizadas. 
 
 ### 2. Deploy do Operator
 
