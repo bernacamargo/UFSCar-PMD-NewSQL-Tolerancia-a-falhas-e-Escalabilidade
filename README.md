@@ -143,6 +143,11 @@ Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele ir�
   ```shell
   $ kubectl apply -f cockroachdb/operator-rbac.yaml
   ```
+      role.rbac.authorization.k8s.io/cockroach-operator-role created
+      rolebinding.rbac.authorization.k8s.io/cockroach-operator-rolebinding created
+      clusterrole.rbac.authorization.k8s.io/cockroach-operator-role created
+      serviceaccount/cockroach-operator-sa created
+      clusterrolebinding.rbac.authorization.k8s.io/cockroach-operator-default created
 
 - Criar o CustomResourceDefinition (CRD) para o Operator
 
@@ -164,9 +169,6 @@ Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele ir�
       
   O retorno esperado é:
 
-      clusterrole.rbac.authorization.k8s.io/cockroach-operator-role created
-      serviceaccount/cockroach-operator-default created
-      clusterrolebinding.rbac.authorization.k8s.io/cockroach-operator-default created
       deployment.apps/cockroach-operator created
 
 - Validar se o Operator está executando
@@ -181,7 +183,7 @@ Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele ir�
 
   > Nota: Caso o status da pod estiver como "ContainerCreating" é só aguardar alguns instantes que o kubernetes esta iniciando o container e logo deverá aparecer como "Running".
 
-### 2. Deploy do cluster1
+### 2. Deploy do cluster
   
 - Abra o arquivo `cockroachdb-cluster.yaml` com um editor de texto
 - Esta etapa é opcional, porém extremamente recomendada em ambientes de produção. <br> Vamos configurar a quantidade de CPU e memoria para cada pod do cluster. Basta procurar no arquivo pelo código abaixo, descomentar as linhas e alterar os valores de `cpu` e `memory`, seguindo a regra de 4GB de memória RAM para cada um núcleo de CPU.
@@ -209,7 +211,7 @@ Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele ir�
 - Aplique as configurações feitas no arquivo `cockroachdb-cluster.yaml`.
 
   ```shell
-  $ kubectl apply -f cockroachdb-cluster.yaml
+  $ kubectl apply -f cockroachdb/cockroachdb-cluster.yaml
   ```
 
   O retorno esperado é:
@@ -230,7 +232,7 @@ Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele ir�
       cockroach-operator-6867445556-9x6zp   1/1     Running   0          43m
       cockroachdb-0                         1/1     Running   0          2m29s
       cockroachdb-1                         1/1     Running   0          104s
-      cockroachdb-2                         1/1     Running   0          67sa
+      cockroachdb-2                         1/1     Running   0          67s
       
 
 ### 3. Executando comandos SQL
@@ -266,7 +268,16 @@ Feito isso, já temos nosso cluster e nossa aplicação configurados e executand
 
   A partir deste momento, já é possível executar comandos SQL diretamente em nossas aplicações do CockroachDB.
 
-#
+- Crie o banco de dados
+
+  ```sql
+  CREATE DATABASE northwind;
+  ```
+
+- Importe o banco de dados
+  
+  Abra o arquivo `database/cockroachdb-northwind-tables.sql`, copie a estrutura das tabelas e cole no terminal aberto no passo anterior. Repita o mesmo processo para o arquivo `database/cockroachdb-northwind-data.sql`.
+
 ### 4. Testes de tolerância a falhas
 
 >Nota: É importante ressaltar que temos um cluster kubernetes, composto de três instâncias de máquinas virtuais (3 workers), onde as pods são executadas e cada pod representa um nó do CockroachDB. Dessa forma quando falamos sobre os nós do CockroachDB estamos nos referindo as pods e quando falamos dos nós do cluster estamos nos referindo as instâncias de máquina virtual do Kubernetes.
@@ -283,39 +294,36 @@ Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na
   Vamos verificar como está o dado que desejamos modificar, execute o seguinte comando SQL para busca-lo na tabela `suppliers`.
 
   ```sql
-  SELECT id, company, first_name, last_name, city, state_province 
-  FROM northwind.suppliers 
-  WHERE id = 1;
+  SELECT supplier_id, company_name, city, country 
+  FROM northwind.suppliers
+  WHERE supplier_id = 1;
   ```
 
   O retorno deve ser
 
-      +----+------------+--------------+-----------+------+----------------+
-      | id | company    | first_name   | last_name | city | state_province |
-      +----+------------+--------------+-----------+------+----------------+
-      |  1 | Supplier A | Elizabeth A. | Andersen  | NULL | NULL           |
-      +----+------------+--------------+-----------+------+----------------+
+        supplier_id |  company_name  |  city  | country
+      --------------+----------------+--------+----------
+                  1 | Exotic Liquids | London | UK
   Execute o comando abaixo para realizar a alteração no nó 2. 
 
   ```sql
   UPDATE suppliers 
-  SET city='Indaiatuba', state_province='São Paulo' 
-  WHERE  id = '1';  
+  SET city='Indaiatuba', country='BR' 
+  WHERE  supplier_id = 1;  
   ```
 
-  Agora acesse o nó 1, repetindo os passos da etapa [3](https://github.com/bernacamargo/PMD-tutorial#3-executando-comandos-sql-na-pod), e após entrar no build-in SQL, execute a consulta abaixo
-
+  Agora acesse o nó 1, repetindo os passos da etapa [3](https://github.com/bernacamargo/PMD-tutorial#3-executando-comandos-sql-na-pod), e após entrar no build-in SQL, execute novamente a consulta abaixo
+  
   ```sql
-  SELECT * FROM bank.accounts WHERE nome = 'Pessoa 01';
+  SELECT supplier_id, company_name, city, country 
+  FROM northwind.suppliers
+  WHERE supplier_id = 1;
   ```
-
     O retorno deve ser
 
-      +----+------------+--------------+-----------+------------+----------------+
-      | id | company    | first_name   | last_name | city       | state_province |
-      +----+------------+--------------+-----------+------------+----------------+
-      |  1 | Supplier A | Elizabeth A. | Andersen  | Indaiatuba | São Paulo      |
-      +----+------------+--------------+-----------+------------+----------------+
+        supplier_id |  company_name  |    city    | country
+      --------------+----------------+------------+----------
+                  1 | Exotic Liquids | Indaiatuba | BR
 
   Como podemos observar, a atualização foi realizada e também foi replicada para as outras pods. Dessa forma podemos realizar este mesmo teste com as outras pods e veremos que todas estão sincronizadas.
 
@@ -600,6 +608,17 @@ O hash existente no arquivo representa a senha `123456`, o qual utilizaremos par
       mysql>
 
   Agora podemos executar nossos comandos SQL dentro do cluster.
+
+- Crie o banco de dados
+
+  ```sql
+  CREATE DATABASE northwind;
+  ```
+
+- Importe o banco de dados
+  
+  Abra o arquivo `database/singlestore-northwind-tables.sql`, copie a estrutura das tabelas e cole no terminal aberto no passo anterior. Repita o mesmo processo para o arquivo `database/singlestore-northwind-data.sql`.
+
 
 ### 5. Testes de tolerância à falhas
 
