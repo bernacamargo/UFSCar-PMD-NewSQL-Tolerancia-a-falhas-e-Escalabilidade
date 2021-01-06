@@ -9,23 +9,24 @@
 - [Sumário](#sumário)
 - [Objetivo](#objetivo)
 - [Introdução](#introdução)
+- [Estudo de caso](#estudo-de-caso)
 - [Tecnologias que vamos utilizar](#tecnologias-que-vamos-utilizar)
 - [Pré-requisitos](#pré-requisitos)
 - [Recursos necessários](#recursos-necessários)
 - [Criar um Cluster Kubernetes](#criar-um-cluster-kubernetes)
 - [CockroachDB](#cockroachdb)
   - [1. Deploy do Operator](#1-deploy-do-operator)
-  - [2. Deploy do cluster](#2-deploy-do-cluster)
+  - [2. Deploy do cluster1](#2-deploy-do-cluster1)
   - [3. Executando comandos SQL](#3-executando-comandos-sql)
   - [4. Testes de tolerância a falhas](#4-testes-de-tolerância-a-falhas)
   - [5. Testes de Escalabilidade](#5-testes-de-escalabilidade)
 - [SingleStore](#singlestore)
   - [1. Conceitos básicos](#1-conceitos-básicos)
-  - [2. Preparar manifestos para instalar o Operator no cluster](#2-preparar-manifestos-para-instalar-o-operator-no-cluster)
-  - [3. Executando o deploy](#3-executando-o-deploy)
-  - [4. Acessando o Cluster](#4-acessando-o-cluster)
-  - [5. Testes de tolerância à falhas](#5-testes-de-tolerância-à-falhas)
-  - [6. Testes de escalabilidade](#6-testes-de-escalabilidade)
+  - [2. Deploy do Operator](#2-deploy-do-operator)
+  - [4. Executando o deploy](#4-executando-o-deploy)
+  - [5. Acessando o Cluster](#5-acessando-o-cluster)
+  - [6. Testes de tolerância à falhas](#6-testes-de-tolerância-à-falhas)
+  - [7. Testes de escalabilidade](#7-testes-de-escalabilidade)
 - [Benchmark](#benchmark)
 - [Conclusão](#conclusão)
    
@@ -36,6 +37,23 @@ No contexto de bancos de dados relacionais e distribuídos (NewSQL), temos como 
 ## Introdução
 
 O NewSQL surgiu como uma nova proposta, pois com o uso do NOSQL acabou apresentando alguns problemas como por exemplo: a falta, do uso de transações, das consultas SQL e a estrutura complexa por não ter uma modelagem estruturada. Ele veio com o objetivo de ter os os pontos positivos dos do modelo relacional para as arquiteturas distribuídas e aumentar o desempenhos das queries de SQL, não tendo a necessidade de servidores mais potentes para melhor execução, e utilizando a escalabilidade vertical e mantendo as propriedades ACID(Atomicidade, Consistência, Isolamento e Durabilidade).
+
+## Estudo de caso
+
+A base de dados Northwind é uma base de dados modelo que foi originalmente criada pela Microsoft e utilizada para os seus tutoriais numa variedade de produtos de base de dados durante décadas. A base de dados Northwind contém os dados de vendas de uma empresa fictícia chamada "Northwind Traders", que importa e exporta alimentos especializados de todo o mundo. É um excelente esquema de simulação para um ERP de pequenas empresas, com clientes, encomendas, inventário, compras, fornecedores, expedição, empregados, e contabilidade de entrada única. 
+
+O conjunto de dados inclui as seguintes tabelas:
+
+- Suppliers: Fornecedores e vendedores de Northwind
+- Customers: Clientes que compram produtos da Northwind
+- Employees: Detalhes dos empregados dos comerciantes de Northwind
+- Products: Informação sobre produtos
+- Shippers: Os detalhes dos expedidores que enviam os produtos dos comerciantes para os clientes finais
+- Orders e Order_Details: Transações de ordens de venda que ocorrem entre os clientes e a empresa
+
+![](https://docs.yugabyte.com/images/sample-data/northwind/northwind-er-diagram.png)
+
+> Nota: https://github.com/jpwhite3/northwind-MySQL
 
 ## Tecnologias que vamos utilizar
 
@@ -62,6 +80,8 @@ Antes de começarmos, é necessário que você atente-se à alguns detalhes cons
   CPU   | 2 núcleos de vCPU por nó
   Memória | No mínimo 4GB por núcleo de vCPU
   Armazenamento | Cada nó deve ter pelo menos 150GB por núcleo de vCPU
+
+<br>
 
 - SingleStore
   
@@ -114,13 +134,13 @@ Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele ir�
 - Definir as autorizações para o Operator gerenciar o cluster
 
   ```shell
-  $ kubectl apply -f CockroachDB/operator-rbac.yaml
+  $ kubectl apply -f cockroachdb/operator-rbac.yaml
   ```
 
 - Criar o CustomResourceDefinition (CRD) para o Operator
 
   ```shell
-  $ kubectl apply -f CockroachDB/operator-crd.yaml
+  $ kubectl apply -f cockroachdb/operator-crd.yaml
   ```
 
   O retorno esperado é:
@@ -132,7 +152,7 @@ Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele ir�
 - Criar o Controller do Operator
 
   ```shell
-  $ kubectl apply -f CockroachDB/operator-deploy.yaml
+  $ kubectl apply -f cockroachdb/operator-deploy.yaml
   ```
       
   O retorno esperado é:
@@ -154,7 +174,7 @@ Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele ir�
 
   > Nota: Caso o status da pod estiver como "ContainerCreating" é só aguardar alguns instantes que o kubernetes esta iniciando o container e logo deverá aparecer como "Running".
 
-### 2. Deploy do cluster
+### 2. Deploy do cluster1
   
 - Abra o arquivo `cockroachdb-cluster.yaml` com um editor de texto
 - Esta etapa é opcional, porém extremamente recomendada em ambientes de produção. <br> Vamos configurar a quantidade de CPU e memoria para cada pod do cluster. Basta procurar no arquivo pelo código abaixo, descomentar as linhas e alterar os valores de `cpu` e `memory`, seguindo a regra de 4GB de memória RAM para cada um núcleo de CPU.
@@ -400,7 +420,7 @@ Todas essas ações são necessários estudos e estragégias que vão depender d
   .
   tlsEnabled: true
   image:
-      name: CockroachDB/cockroach:v20.2.0
+      name: cockroachdb/cockroach:v20.2.0
   nodes: 5
   ```
 
@@ -452,244 +472,140 @@ Feito isso, um cluster com três nós será criado e inicializado. Em alguns mom
 
 > Nota: o teste foi realizaado com o cluster com as configurações mínimas para rodar o software e que os testes serem realizadas. 
 
-### 2. Preparar manifestos para instalar o Operator no cluster
+### 2. Deploy do Operator
 
-> Para garantir o funcionamento do cluster altere apenas o arquivo `singlestore-cluster.yaml `
+- [operator-rbac.yaml](https://github.com/bernacamargo/UFSCar-PMD-NewSQL-Tolerancia-a-falhas-e-Escalabilidade/blob/main/singlestore/operator-rbac.yaml)
 
-- rbac.yaml
-
-  Essa configuração irá criar a definição de um ServiceAccount para o MemSQL Operator utilizar. 
-
-
-  ```yaml
-  apiVersion: v1
-  kind: ServiceAccount
-  metadata:
-    name: memsql-operator
-  ---
-  apiVersion: rbac.authorization.k8s.io/v1
-  kind: Role
-  metadata:
-    name: memsql-operator
-  rules:
-  - apiGroups:
-    - ""
-    resources:
-    - pods
-    - services
-    - endpoints
-    - persistentvolumeclaims
-    - events
-    - configmaps
-    - secrets
-    verbs:
-    - '*'
-  - apiGroups:
-    - policy
-    resources:
-    - poddisruptionbudgets
-    verbs:
-    - '*'
-  - apiGroups:
-    - batch
-    resources:
-    - cronjobs
-    verbs:
-    - '*'
-  - apiGroups:
-    - ""
-    resources:
-    - namespaces
-    verbs:
-    - get
-  - apiGroups:
-    - apps
-    - extensions
-    resources:
-    - deployments
-    - daemonsets
-    - replicasets
-    - statefulsets
-    verbs:
-    - '*'
-  - apiGroups:
-    - memsql.com
-    resources:
-    - '*'
-    verbs:
-    - '*'
-  ---
-  kind: RoleBinding
-  apiVersion: rbac.authorization.k8s.io/v1
-  metadata:
-    name: memsql-operator
-  subjects:
-  - kind: ServiceAccount
-    name: memsql-operator
-  roleRef:
-    kind: Role
-    name: memsql-operator
-    apiGroup: rbac.authorization.k8s.io
+  Essa configuração irá criar a definição de um ServiceAccount para o MemSQL Operator utilizar.
+  ```shell
+  $ kubectl apply -f singlestore/operator-rbac.yaml
   ```
 
-- SingleStore-cluster-crd.yaml
+      serviceaccount/memsql-operator created
+      role.rbac.authorization.k8s.io/memsql-operator created
+      rolebinding.rbac.authorization.k8s.io/memsql-operator created
+
+- [operator-crd.yaml](https://github.com/bernacamargo/UFSCar-PMD-NewSQL-Tolerancia-a-falhas-e-Escalabilidade/blob/main/singlestore/operator-crd.yaml)
 
   Define um recurso específico MemSQLCluster como um tipo de recurso para ser utilizado pelo Operator.
 
-  ```yaml
-  apiVersion: apiextensions.k8s.io/v1beta1
-  kind: CustomResourceDefinition
-  metadata:
-    name: memsqlclusters.memsql.com
-  spec:
-    group: memsql.com
-    names:
-      kind: MemsqlCluster
-      listKind: MemsqlClusterList
-      plural: memsqlclusters
-      singular: memsqlcluster
-      shortNames:
-        - memsql
-    scope: Namespaced
-    version: v1alpha1
-    subresources:
-      status: {}
-    additionalPrinterColumns:
-    - name: Aggregators
-      type: integer
-      description: Number of MemSQL Aggregators
-      JSONPath: .spec.aggregatorSpec.count
-    - name: Leaves
-      type: integer
-      description: Number of MemSQL Leaves (per availability group)
-      JSONPath: .spec.leafSpec.count
-    - name: Redundancy Level
-      type: integer
-      description: Redundancy level of MemSQL Cluster
-      JSONPath: .spec.redundancyLevel
-    - name: Age
-      type: date
-      JSONPath: .metadata.creationTimestamp
+  ```shell
+  $ kubectl apply -f singlestore/operator-crd.yaml
   ```
+      customresourcedefinition.apiextensions.k8s.io/memsqlclusters.memsql.com created
 
-- deployment.yaml
+- [operator-deploy.yaml](https://github.com/bernacamargo/UFSCar-PMD-NewSQL-Tolerancia-a-falhas-e-Escalabilidade/blob/main/singlestore/operator-deploy.yaml)
 
   Realiza o deploy do Operator, iniciando uma pod para executa-lo.
+  ```shell
+    $ kubectl apply -f singlestore/operator-deploy.yaml
+    ```
 
-  ```yaml
-  apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: memsql-operator
-  spec:
-    replicas: 1
-    selector:
-      matchLabels:
-        name: memsql-operator
-    template:
-      metadata:
-        labels:
-          name: memsql-operator
-      spec:
-        serviceAccountName: memsql-operator
-        containers:
-          - name: memsql-operator
-            image: memsql/operator:1.2.3-centos-ef2b8561
-            imagePullPolicy: Always
-            args: [
-              # Cause the operator to merge rather than replace annotations on services
-              "--merge-service-annotations",
-              # Allow the process inside the container to have read/write access to the `/var/lib/memsql` volume.
-              "--fs-group-id", "5555"
-            ]
-            env:
-              - name: WATCH_NAMESPACE
-                valueFrom:
-                  fieldRef:
-                    fieldPath: metadata.namespace
-              - name: POD_NAME
-                valueFrom:
-                  fieldRef:
-                    fieldPath: metadata.name
-              - name: OPERATOR_NAME
-                value: "memsql-operator"
-  ```
-
+        deployment.apps/memsql-operator created
   > Nota: Neste projeto a imagem utilizada para a criação do container do operator é a `memsql/operator:1.2.3-centos-ef2b8561` disponibilizada no Docker Hub pelo SingleScore.
 
-- SingleStore-cluster.yaml 
+### 3. Deploy do cluster
 
-  Esta é a configuração principal do nosso cluster, é através deste arquivo que iremos definir se nosso cluster será replicado e também a quantidade de recursos alocados para cada nó.
+Esta é a configuração principal do nosso cluster, é através do arquivo `singlestore-cluster.yaml` que iremos definir se nosso cluster será replicado e também a quantidade de recursos alocados para cada nó.
 
-  ```yaml
-  apiVersion: memsql.com/v1alpha1
-  kind: MemsqlCluster
-  metadata:
-    name: memsql-cluster
-  spec:
-    license: LICENSE_KEY
-    adminHashedPassword: "*6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9"
-    nodeImage:
-      repository: memsql/node
-      tag: centos-7.3.2-a364d4b31f
+```yaml
+apiVersion: memsql.com/v1alpha1
+kind: MemsqlCluster
+metadata:
+  name: memsql-cluster
+spec:
+  license: LICENSE_KEY
+  adminHashedPassword: "*6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9"
+  nodeImage:
+    repository: memsql/node
+    tag: centos-7.3.2-a364d4b31f
 
-    redundancyLevel: 1
+  redundancyLevel: 1
 
-    serviceSpec:
-      objectMetaOverrides:
-        labels:
-          custom: label
-        annotations:
-          custom: annotations
+  serviceSpec:
+    objectMetaOverrides:
+      labels:
+        custom: label
+      annotations:
+        custom: annotations
 
-    aggregatorSpec:
-      count: 1
-      height: 0.5
-      storageGB: 25
-      storageClass: standard
+  aggregatorSpec:
+    count: 1
+    height: 0.5
+    storageGB: 25
+    storageClass: standard
 
-      objectMetaOverrides:
-        annotations:
-          optional: annotation
-        labels:
-          optional: label
+    objectMetaOverrides:
+      annotations:
+        optional: annotation
+      labels:
+        optional: label
 
-    leafSpec:
-      count: 2
-      height: 0.5
-      storageGB: 25
-      storageClass: standard
+  leafSpec:
+    count: 2
+    height: 0.5
+    storageGB: 25
+    storageClass: standard
 
-      objectMetaOverrides:
-        annotations:
-          optional: annotation
-        labels:
-          optional: label
-  ```
+    objectMetaOverrides:
+      annotations:
+        optional: annotation
+      labels:
+        optional: label
+```
 
-  Neste arquivo você precisará fazer algumas alterações:
+Neste arquivo você precisará fazer algumas alterações:
 
-  - Altere o campo `name` para o nome do seu cluster;
-  - Altere o campo `license` e cole a sua [licença do SingleStore](https://portal.SingleStore.com/licenses);
-  - Defina no campo `adminHashedPassword` sua senha encriptografada para o usuário `admin`
-  O hash existente no arquivo representa a senha `123456`, o qual utilizaremos para esse tutorial. Caso queira criar uma senha utilize o seguinte algoritmo:
+- Altere o campo `name` para o nome do seu cluster;
+- Altere o campo `license` e substitua `LICENSE_KEY` pela sua [licença do SingleStore](https://portal.SingleStore.com/licenses);
+- Defina no campo `adminHashedPassword` sua senha encriptografada para o usuário `admin`
+O hash existente no arquivo representa a senha `123456`, o qual utilizaremos para esse tutorial. Caso queira criar uma senha utilize o seguinte algoritmo:
   ```python
   from hashlib import sha1
   print("*" + sha1(sha1('secretpass').digest()).hexdigest().upper())
   ```
-  - Altere o campo `redundancyLevel` para `2` caso deseje ativar o recruso de [Alta Disponibilidade](https://docs.SingleStore.com/v7.3/guides/cluster-management/high-availability-and-disaster-recovery/managing-high-availability/managing-high-availability/);
-  - Altere os campos `count` para aumentar ou diminuir a quantidade de nós agregadores ou folha;
-  - O campo `height` define a quantidade de núcleos de CPU e memória RAM serão separados para o nó. O valor `1` representa a quantidade recomendada: `8 núcleos CPU e 32GB RAM`. O menor valor possível é `0.5` que representa metade da quantidade recomendada, ou seja, `4 núcleos CPU e 16GB RAM`;
-  - Os campos `storageGB` definem a quantidade de armazenamento que será solicitado para cada volume persistente nos nós.
-
-  > Nota: Todos os arquivos .yaml acima também estão disponiveis na [documentação do SingleStore](https://docs.SingleStore.com/v7.3/guides/deploy-memsql/self-managed/kubernetes/step-3/).
+- Altere o campo `redundancyLevel` para `2` caso deseje ativar o recruso de [Alta Disponibilidade](https://docs.SingleStore.com/v7.3/guides/cluster-management/high-availability-and-disaster-recovery/managing-high-availability/managing-high-availability/);
+- Altere os campos `count` para aumentar ou diminuir a quantidade de nós agregadores ou folha;
+- O campo `height` define a quantidade de núcleos de CPU e memória RAM serão separados para o nó. O valor `1` representa a quantidade recomendada: `8 núcleos CPU e 32GB RAM`. O menor valor possível é `0.5` que representa metade da quantidade recomendada, ou seja, `4 núcleos CPU e 16GB RAM`;
+- Os campos `storageGB` definem a quantidade de armazenamento que será solicitado para cada volume persistente nos nós.
 
 
-### 3. Executando o deploy
+- Aguarde a pod chamada "memsql-operator" ter seu status como `Running`
+
+  ```shell
+  $ kubectl get pods
+  ```
+      NAME                               READY   STATUS    RESTARTS   AGE
+      memsql-operator-5f4b595f89-hfqzt   1/1     Running   0          14s
+
+- Realizar o deploy do cluster MemSQL.
+
+  ```shell
+  $ kubectl apply -f singlestore/singlestore-cluster.yaml
+  ```
+      memsqlcluster.memsql.com/memsql-cluster created
+
+  Verifique se os nós foram iniciados corretamente
+
+  ```shell
+  $ kubectl get pods
+  ```
+
+      NAME                               READY   STATUS    RESTARTS   AGE
+      memsql-operator-5f4b595f89-hfqzt   1/1     Running   0          110s
+      node-memsql-cluster-leaf-ag1-0     2/2     Running   0          54s
+      node-memsql-cluster-leaf-ag1-1     2/2     Running   0          54s
+      node-memsql-cluster-master-0       2/2     Running   0          54s
+
+  A partir deste ponto já temos nosso cluster SingleStore configurado e funcionando, dessa forma já podemos iniciar os testes com querys SQL básicas.
+
+> Nota: Todos os arquivos .yaml acima também estão disponiveis na [documentação do SingleStore](https://docs.SingleStore.com/v7.3/guides/deploy-memsql/self-managed/kubernetes/step-3/).
+
+### 4. Executando o deploy
 
 - Primeiramente precisamos instalar os recursos do memsql
   ```shell
-  $ kubectl apply -f SingleStore/operator-rbac.yaml
+  $ kubectl apply -f singlestore/operator-rbac.yaml
   ```
 
       serviceaccount/memsql-operator created
@@ -699,14 +615,14 @@ Feito isso, um cluster com três nós será criado e inicializado. Em alguns mom
 - Agora instale as definições de recurso para o Operator
 
   ```shell
-  $ kubectl apply -f SingleStore/operator-crd.yaml
+  $ kubectl apply -f singlestore/operator-crd.yaml
   ```
       customresourcedefinition.apiextensions.k8s.io/memsqlclusters.memsql.com created
 
 - Realize o deploy do MemSQL Operator
 
   ```shell
-  $ kubectl apply -f SingleStore/operator-deploy.yaml
+  $ kubectl apply -f singlestore/operator-deploy.yaml
   ```
 
       deployment.apps/memsql-operator created
@@ -722,7 +638,7 @@ Feito isso, um cluster com três nós será criado e inicializado. Em alguns mom
 - Realizar o deploy do cluster MemSQL.
 
   ```shell
-  $ kubectl apply -f SingleStore/SingleStore-cluster.yaml
+  $ kubectl apply -f singlestore/singlestore-cluster.yaml
   ```
       memsqlcluster.memsql.com/memsql-cluster created
 
@@ -740,7 +656,7 @@ Feito isso, um cluster com três nós será criado e inicializado. Em alguns mom
 
   A partir deste momento já temos nosso cluster Memsql configurado e funcionando, dessa forma já podemos iniciar os testes com querys SQL básicas.
 
-### 4. Acessando o Cluster
+### 5. Acessando o Cluster
 
 - Verificar os serviços criados no deploy
 
@@ -848,7 +764,7 @@ Feito isso, um cluster com três nós será criado e inicializado. Em alguns mom
       |  9 | Pessoa 09 | 5143-5  | 10255-1 | POUPANA    |   974113 |
       +----+-----------+---------+---------+------------+----------+
 
-### 5. Testes de tolerância à falhas
+### 6. Testes de tolerância à falhas
 
 Relembrando o objetivo da tolerância à falhas, ela impede que alguma mudança da nossa base de dados seja perdida por conta de algum problema, com isso é realizado o método de replicação para que todos os nós tenham as mudanças realizadas, e assim caso um nó tenha algum problema, o outro nó do sistema terá as informações consistentes. 
 
@@ -923,7 +839,7 @@ Diferentemente do cockroach, em que configuramos um cluster totalmente replicado
 
 
 #
-### 6. Testes de escalabilidade
+### 7. Testes de escalabilidade
 
 O escalonamento do cluster será executado baseado no conceito de escalabilidade vertical. Este conceito representa o aumentar a capacidade dos recursos de uma mesma máquina. Em nosso contexto a escalabilidade vertical vai ser aplicada através da manipulação da quantidade de instâncias do banco de dados(pods).
 
@@ -997,7 +913,7 @@ Este é o trecho de código que iremos modificar para podermos testar a escalabi
   Para realizar o deploy do cluster com a nova configuração basta realizar o commando `apply` novamente.
 
   ```shell
-  $ kubectl apply -f SingleStore/SingleStore-cluster.yaml
+  $ kubectl apply -f singlestore/singlestore-cluster.yaml
   ```
       memsqlcluster.memsql.com/memsql-cluster configured
 
