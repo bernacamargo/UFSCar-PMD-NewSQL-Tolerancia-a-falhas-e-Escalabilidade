@@ -23,10 +23,10 @@
 - [SingleStore](#singlestore)
   - [1. Conceitos básicos](#1-conceitos-básicos)
   - [2. Deploy do Operator](#2-deploy-do-operator)
-  - [4. Executando o deploy](#4-executando-o-deploy)
-  - [5. Acessando o Cluster](#5-acessando-o-cluster)
-  - [6. Testes de tolerância à falhas](#6-testes-de-tolerância-à-falhas)
-  - [7. Testes de escalabilidade](#7-testes-de-escalabilidade)
+  - [3. Deploy do Cluster](#3-deploy-do-cluster)
+  - [4. Acessando o Cluster](#4-acessando-o-cluster)
+  - [5. Testes de tolerância à falhas](#5-testes-de-tolerância-à-falhas)
+  - [6. Testes de escalabilidade](#6-testes-de-escalabilidade)
 - [Benchmark](#benchmark)
 - [Conclusão](#conclusão)
    
@@ -553,62 +553,7 @@ O hash existente no arquivo representa a senha `123456`, o qual utilizaremos par
 
 > Nota: Todos os arquivos .yaml acima também estão disponiveis na [documentação do SingleStore](https://docs.SingleStore.com/v7.3/guides/deploy-memsql/self-managed/kubernetes/step-3/).
 
-### 4. Executando o deploy
-
-- Primeiramente precisamos instalar os recursos do memsql
-  ```shell
-  $ kubectl apply -f singlestore/operator-rbac.yaml
-  ```
-
-      serviceaccount/memsql-operator created
-      role.rbac.authorization.k8s.io/memsql-operator created
-      rolebinding.rbac.authorization.k8s.io/memsql-operator created
-
-- Agora instale as definições de recurso para o Operator
-
-  ```shell
-  $ kubectl apply -f singlestore/operator-crd.yaml
-  ```
-      customresourcedefinition.apiextensions.k8s.io/memsqlclusters.memsql.com created
-
-- Realize o deploy do MemSQL Operator
-
-  ```shell
-  $ kubectl apply -f singlestore/operator-deploy.yaml
-  ```
-
-      deployment.apps/memsql-operator created
-
-- Aguarde a pod chamada "memsql-operator" ter seu status como `Running`
-
-  ```shell
-  $ kubectl get pods
-  ```
-      NAME                               READY   STATUS    RESTARTS   AGE
-      memsql-operator-5f4b595f89-hfqzt   1/1     Running   0          14s
-
-- Realizar o deploy do cluster MemSQL.
-
-  ```shell
-  $ kubectl apply -f singlestore/singlestore-cluster.yaml
-  ```
-      memsqlcluster.memsql.com/memsql-cluster created
-
-  Verifique se os nós foram iniciados corretamente
-
-  ```shell
-  $ kubectl get pods
-  ```
-
-      NAME                               READY   STATUS    RESTARTS   AGE
-      memsql-operator-5f4b595f89-hfqzt   1/1     Running   0          110s
-      node-memsql-cluster-leaf-ag1-0     2/2     Running   0          54s
-      node-memsql-cluster-leaf-ag1-1     2/2     Running   0          54s
-      node-memsql-cluster-master-0       2/2     Running   0          54s
-
-  A partir deste momento já temos nosso cluster Memsql configurado e funcionando, dessa forma já podemos iniciar os testes com querys SQL básicas.
-
-### 5. Acessando o Cluster
+### 4. Acessando o Cluster
 
 - Verificar os serviços criados no deploy
 
@@ -656,7 +601,7 @@ O hash existente no arquivo representa a senha `123456`, o qual utilizaremos par
 
   Agora podemos executar nossos comandos SQL dentro do cluster.
 
-### 6. Testes de tolerância à falhas
+### 5. Testes de tolerância à falhas
 
 Relembrando o objetivo da tolerância à falhas, ela impede que alguma mudança da nossa base de dados seja perdida por conta de algum problema, com isso é realizado o método de replicação para que todos os nós tenham as mudanças realizadas, e assim caso um nó tenha algum problema, o outro nó do sistema terá as informações consistentes. 
 
@@ -724,7 +669,7 @@ Diferentemente do cockroach, em que configuramos um cluster totalmente replicado
 
 
 #
-### 7. Testes de escalabilidade
+### 6. Testes de escalabilidade
 
 O escalonamento do cluster será executado baseado no conceito de escalabilidade vertical. Este conceito representa o aumentar a capacidade dos recursos de uma mesma máquina. Em nosso contexto a escalabilidade vertical vai ser aplicada através da manipulação da quantidade de instâncias do banco de dados(pods).
 
