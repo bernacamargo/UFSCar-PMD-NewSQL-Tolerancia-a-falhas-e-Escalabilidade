@@ -51,9 +51,16 @@ O conjunto de dados inclui as seguintes tabelas:
 - Shippers: Os detalhes dos expedidores que enviam os produtos dos comerciantes para os clientes finais
 - Orders e Order_Details: Transações de ordens de venda que ocorrem entre os clientes e a empresa
 
+A seguir o diagrama de relacionamento das tabelas:
+
 ![](https://docs.yugabyte.com/images/sample-data/northwind/northwind-er-diagram.png)
 
-> Nota: https://github.com/jpwhite3/northwind-MySQL
+
+Os arquivos para importação da estrutura das tabelas e seus dados estão na pasta `database`
+- [database/northwind-tables](https://raw.githubusercontent.com/bernacamargo/UFSCar-PMD-NewSQL-Tolerancia-a-falhas-e-Escalabilidade/main/database/northwind-tables.sql)
+- [database/northwind-data](https://raw.githubusercontent.com/bernacamargo/UFSCar-PMD-NewSQL-Tolerancia-a-falhas-e-Escalabilidade/main/database/northwind-data.sql)
+
+> Nota: Os dados foram obtidos no https://github.com/jpwhite3/northwind-MySQL
 
 ## Tecnologias que vamos utilizar
 
@@ -259,68 +266,6 @@ Feito isso, já temos nosso cluster e nossa aplicação configurados e executand
 
   A partir deste momento, já é possível executar comandos SQL diretamente em nossas aplicações do CockroachDB.
 
-- Crie o banco de dados chamado `bank`
-
-  ```sql
-  CREATE DATABASE bank;
-  ```
-
-- Crie uma tabela chamada `bank.accounts`
-
-  ```sql
-  CREATE TABLE bank.accounts (
-      id          int             NOT NULL    AUTO_INCREMENT,
-      nome        VARCHAR(255)    NOT NULL,
-      agencia     VARCHAR(15)     NOT NULL,
-      conta       VARCHAR(15)     NOT NULL,
-      tipo_conta  VARCHAR(50)     NOT NULL,
-      saldo       FLOAT           NOT NULL,
-      PRIMARY KEY (id)
-  );
-  ```
-
-- Crie os dados para a tabela
-  
-  ```sql
-  INSERT INTO bank.accounts(id, nome, agencia, conta, tipo_conta, saldo) 
-  VALUES 
-      (NULL, 'Pessoa 01', '5482-3', '85377-3', 'CORRENTE', 51230),
-      (NULL, 'Pessoa 02', '3123-5', '43176-4', 'CORRENTE', 1500),
-      (NULL, 'Pessoa 03', '4235-1', '12524-2', 'CORRENTE', 30000),
-      (NULL, 'Pessoa 04', '2315-3', '48255-9', 'POUPANÇA', 4232),
-      (NULL, 'Pessoa 05', '5144-7', '90132-8', 'CORRENTE', 84412),
-      (NULL, 'Pessoa 06', '7223-6', '98431-5', 'POUPANÇA', 554876),
-      (NULL, 'Pessoa 07', '2623-3', '68232-5', 'CORRENTE', 10000000),
-      (NULL, 'Pessoa 08', '9184-9', '12537-6', 'CORRENTE', 54656654),
-      (NULL, 'Pessoa 09', '5143-5', '10255-1', 'POUPANÇA', 974113),
-      (NULL, 'Pessoa 10', '8743-5', '23985-3', 'CORRENTE', 642154);
-  ```
-
-- Agora realize um SELECT na tabela para ver seus dados.
-
-  ```sql
-  SELECT * FROM bank.accounts;
-  ```
-
-  O retorno deve ser parecido com:
-
-      +----+-----------+---------+---------+------------+----------+
-      | id | nome      | agencia | conta   | tipo_conta | saldo    |
-      +----+-----------+---------+---------+------------+----------+
-      |  8 | Pessoa 08 | 9184-9  | 12537-6 | CORRENTE   | 54656700 |
-      |  1 | Pessoa 01 | 5482-3  | 85377-3 | CORRENTE   |    51230 |
-      |  3 | Pessoa 03 | 4235-1  | 12524-2 | CORRENTE   |    30000 |
-      |  6 | Pessoa 06 | 7223-6  | 98431-5 | POUPANA    |   554876 |
-      |  5 | Pessoa 05 | 5144-7  | 90132-8 | CORRENTE   |    84412 |
-      |  7 | Pessoa 07 | 2623-3  | 68232-5 | CORRENTE   | 10000000 |
-      |  2 | Pessoa 02 | 3123-5  | 43176-4 | CORRENTE   |     1500 |
-      |  4 | Pessoa 04 | 2315-3  | 48255-9 | POUPANA    |     4232 |
-      | 10 | Pessoa 10 | 8743-5  | 23985-3 | CORRENTE   |   642154 |
-      |  9 | Pessoa 09 | 5143-5  | 10255-1 | POUPANA    |   974113 |
-      +----+-----------+---------+---------+------------+----------+
-
-Agora chegou o momento de realizarmos nossos testes para averiguar a tolerância a falhas e a escalabilidade do CockroachDB.
-
 #
 ### 4. Testes de tolerância a falhas
 
@@ -333,24 +278,29 @@ Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na
 
 - Replicação de dados
 
-  Primeiramente vamos verificar como está o dado que desejamos modificar, execute o seguinte comando SQL para busca-lo na tabela `accounts`.
+  Primeiramente faça a importação dos arquivos disponibilizados na pasta [database](https://github.com/bernacamargo/UFSCar-PMD-NewSQL-Tolerancia-a-falhas-e-Escalabilidade/tree/main/database). 
+  
+  Vamos verificar como está o dado que desejamos modificar, execute o seguinte comando SQL para busca-lo na tabela `suppliers`.
 
   ```sql
-  SELECT * FROM bank.accounts WHERE nome = 'Pessoa 01';
+  SELECT id, company, first_name, last_name, city, state_province 
+  FROM northwind.suppliers 
+  WHERE id = 1;
   ```
 
   O retorno deve ser
 
-      +----+-----------+---------+---------+------------+----------+
-      | id | nome      | agencia | conta   | tipo_conta | saldo    |
-      +----+-----------+---------+---------+------------+----------+
-      |  1 | Pessoa 01 | 5482-3  | 85377-3 | CORRENTE   |    51230 |
-      +----+-----------+---------+---------+------------+----------+
-
+      +----+------------+--------------+-----------+------+----------------+
+      | id | company    | first_name   | last_name | city | state_province |
+      +----+------------+--------------+-----------+------+----------------+
+      |  1 | Supplier A | Elizabeth A. | Andersen  | NULL | NULL           |
+      +----+------------+--------------+-----------+------+----------------+
   Execute o comando abaixo para realizar a alteração no nó 2. 
 
   ```sql
-  UPDATE bank.accounts SET tipo_conta='POUPANÇA' WHERE nome = 'Pessoa 01';
+  UPDATE suppliers 
+  SET city='Indaiatuba', state_province='São Paulo' 
+  WHERE  id = '1';  
   ```
 
   Agora acesse o nó 1, repetindo os passos da etapa [3](https://github.com/bernacamargo/PMD-tutorial#3-executando-comandos-sql-na-pod), e após entrar no build-in SQL, execute a consulta abaixo
@@ -361,11 +311,11 @@ Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na
 
     O retorno deve ser
 
-      +----+-----------+---------+---------+------------+----------+
-      | id | nome      | agencia | conta   | tipo_conta | saldo    |
-      +----+-----------+---------+---------+------------+----------+
-      |  1 | Pessoa 01 | 5482-3  | 85377-3 | POUPANÇA   |    51230 |
-      +----+-----------+---------+---------+------------+----------+
+      +----+------------+--------------+-----------+------------+----------------+
+      | id | company    | first_name   | last_name | city       | state_province |
+      +----+------------+--------------+-----------+------------+----------------+
+      |  1 | Supplier A | Elizabeth A. | Andersen  | Indaiatuba | São Paulo      |
+      +----+------------+--------------+-----------+------------+----------------+
 
   Como podemos observar, a atualização foi realizada e também foi replicada para as outras pods. Dessa forma podemos realizar este mesmo teste com as outras pods e veremos que todas estão sincronizadas.
 
@@ -706,66 +656,6 @@ O hash existente no arquivo representa a senha `123456`, o qual utilizaremos par
 
   Agora podemos executar nossos comandos SQL dentro do cluster.
 
-- Crie o banco de dados chamado `bank`
-
-  ```sql
-  CREATE DATABASE bank;
-  ```
-
-- Crie uma tabela chamada `bank.accounts`
-
-  ```sql
-  CREATE TABLE bank.accounts (
-      id          int             NOT NULL    AUTO_INCREMENT,
-      nome        VARCHAR(255)    NOT NULL,
-      agencia     VARCHAR(15)     NOT NULL,
-      conta       VARCHAR(15)     NOT NULL,
-      tipo_conta  VARCHAR(50)     NOT NULL,
-      saldo       FLOAT           NOT NULL,
-      PRIMARY KEY (id)
-  );
-  ```
-
-- Crie os dados para a tabela
-  
-  ```sql
-  INSERT INTO bank.accounts(id, nome, agencia, conta, tipo_conta, saldo) 
-  VALUES 
-      (NULL, 'Pessoa 01', '5482-3', '85377-3', 'CORRENTE', 51230),
-      (NULL, 'Pessoa 02', '3123-5', '43176-4', 'CORRENTE', 1500),
-      (NULL, 'Pessoa 03', '4235-1', '12524-2', 'CORRENTE', 30000),
-      (NULL, 'Pessoa 04', '2315-3', '48255-9', 'POUPANÇA', 4232),
-      (NULL, 'Pessoa 05', '5144-7', '90132-8', 'CORRENTE', 84412),
-      (NULL, 'Pessoa 06', '7223-6', '98431-5', 'POUPANÇA', 554876),
-      (NULL, 'Pessoa 07', '2623-3', '68232-5', 'CORRENTE', 10000000),
-      (NULL, 'Pessoa 08', '9184-9', '12537-6', 'CORRENTE', 54656654),
-      (NULL, 'Pessoa 09', '5143-5', '10255-1', 'POUPANÇA', 974113),
-      (NULL, 'Pessoa 10', '8743-5', '23985-3', 'CORRENTE', 642154);
-  ```
-
-- Agora realize um SELECT na tabela para ver seus dados.
-
-  ```sql
-  SELECT * FROM bank.accounts;
-  ```
-
-  O retorno deve ser parecido com:
-
-      +----+-----------+---------+---------+------------+----------+
-      | id | nome      | agencia | conta   | tipo_conta | saldo    |
-      +----+-----------+---------+---------+------------+----------+
-      |  8 | Pessoa 08 | 9184-9  | 12537-6 | CORRENTE   | 54656700 |
-      |  1 | Pessoa 01 | 5482-3  | 85377-3 | CORRENTE   |    51230 |
-      |  3 | Pessoa 03 | 4235-1  | 12524-2 | CORRENTE   |    30000 |
-      |  6 | Pessoa 06 | 7223-6  | 98431-5 | POUPANA    |   554876 |
-      |  5 | Pessoa 05 | 5144-7  | 90132-8 | CORRENTE   |    84412 |
-      |  7 | Pessoa 07 | 2623-3  | 68232-5 | CORRENTE   | 10000000 |
-      |  2 | Pessoa 02 | 3123-5  | 43176-4 | CORRENTE   |     1500 |
-      |  4 | Pessoa 04 | 2315-3  | 48255-9 | POUPANA    |     4232 |
-      | 10 | Pessoa 10 | 8743-5  | 23985-3 | CORRENTE   |   642154 |
-      |  9 | Pessoa 09 | 5143-5  | 10255-1 | POUPANA    |   974113 |
-      +----+-----------+---------+---------+------------+----------+
-
 ### 6. Testes de tolerância à falhas
 
 Relembrando o objetivo da tolerância à falhas, ela impede que alguma mudança da nossa base de dados seja perdida por conta de algum problema, com isso é realizado o método de replicação para que todos os nós tenham as mudanças realizadas, e assim caso um nó tenha algum problema, o outro nó do sistema terá as informações consistentes. 
@@ -812,32 +702,25 @@ Diferentemente do cockroach, em que configuramos um cluster totalmente replicado
       node-memsql-cluster-leaf-ag1-1     2/2     Running   0          69m
       node-memsql-cluster-master-0       2/2     Running   0          53s
 
-  Agora vamos acessar o banco de dados novamente e verificar se os dados ainda existem. 
+  Agora vamos acessar o banco de dados novamente e verificar se os dados ainda existem.
 
   ```shell
   $ kubectl exec -it node-memsql-cluster-master-0 -- memsql -u admin -p
   ```
 
   ```sql
-  SELECT * FROM bank.accounts;
+  SELECT id, company, first_name, last_name, city, state_province 
+  FROM northwind.suppliers 
+  WHERE id = 1;
   ```
 
   O retorno deve ser
 
-      +----+-----------+---------+---------+------------+----------+
-      | id | nome      | agencia | conta   | tipo_conta | saldo    |
-      +----+-----------+---------+---------+------------+----------+
-      |  8 | Pessoa 08 | 9184-9  | 12537-6 | CORRENTE   | 54656700 |
-      |  1 | Pessoa 01 | 5482-3  | 85377-3 | CORRENTE   |    51230 |
-      |  3 | Pessoa 03 | 4235-1  | 12524-2 | CORRENTE   |    30000 |
-      |  6 | Pessoa 06 | 7223-6  | 98431-5 | POUPANA    |   554876 |
-      |  5 | Pessoa 05 | 5144-7  | 90132-8 | CORRENTE   |    84412 |
-      |  7 | Pessoa 07 | 2623-3  | 68232-5 | CORRENTE   | 10000000 |
-      |  2 | Pessoa 02 | 3123-5  | 43176-4 | CORRENTE   |     1500 |
-      |  4 | Pessoa 04 | 2315-3  | 48255-9 | POUPANA    |     4232 |
-      | 10 | Pessoa 10 | 8743-5  | 23985-3 | CORRENTE   |   642154 |
-      |  9 | Pessoa 09 | 5143-5  | 10255-1 | POUPANA    |   974113 |
-      +----+-----------+---------+---------+------------+----------+
+      +----+------------+--------------+-----------+------+----------------+
+      | id | company    | first_name   | last_name | city | state_province |
+      +----+------------+--------------+-----------+------+----------------+
+      |  1 | Supplier A | Elizabeth A. | Andersen  | NULL | NULL           |
+      +----+------------+--------------+-----------+------+----------------+
 
 
 #
