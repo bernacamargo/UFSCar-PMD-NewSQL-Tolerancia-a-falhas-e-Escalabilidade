@@ -1,49 +1,54 @@
 <h1>NewSQL - Tolerância à falha e escalabilidade com CockroachDB e SingleStore</h1>
 Projeto desenvolvido na disciplina de Processamento Massivo de Dados na UFSCar Sorocaba, ministrada pela Profª Drª Sahudy Montenegro
 
-## Autores
-<h4> - Bernardo Pinheiro Camargo [@bernacamargo](https://github.com/bernacamargo)</h4>
-<h4> - Renata Praisler [@RenataPraisler](https://github.com/RenataPraisler)</h4>
+<hr>
+<h2>Autores</h2>
 
-## Sumário
-- [Autores](#autores)
-- [Sumário](#sumário)
-- [Objetivo](#objetivo)
-- [Introdução](#introdução)
-- [Estudo de caso](#estudo-de-caso)
-- [Tecnologias que vamos utilizar](#tecnologias-que-vamos-utilizar)
-- [Pré-requisitos](#pré-requisitos)
-- [Recursos necessários](#recursos-necessários)
-- [Criar um Cluster Kubernetes](#criar-um-cluster-kubernetes)
-- [CockroachDB](#cockroachdb)
-  - [1. Deploy do Operator](#1-deploy-do-operator)
-  - [2. Deploy do cluster](#2-deploy-do-cluster)
-  - [3. Executando comandos SQL](#3-executando-comandos-sql)
-  - [4. Testes de tolerância a falhas](#4-testes-de-tolerância-a-falhas)
-  - [5. Testes de Escalabilidade](#5-testes-de-escalabilidade)
-- [SingleStore](#singlestore)
-  - [1. Conceitos básicos](#1-conceitos-básicos)
-  - [2. Deploy do Operator](#2-deploy-do-operator)
-  - [3. Deploy do Cluster](#3-deploy-do-cluster)
-  - [4. Acessando o Cluster](#4-acessando-o-cluster)
-  - [5. Testes de tolerância à falhas](#5-testes-de-tolerância-à-falhas)
-  - [6. Testes de escalabilidade](#6-testes-de-escalabilidade)
-- [Benchmark](#benchmark)
-- [Conclusão](#conclusão)
+- Bernardo Pinheiro Camargo [@bernacamargo](https://github.com/bernacamargo)
+- Renata Praisler [@RenataPraisler](https://github.com/RenataPraisler)
+
+<h2>Sumário</h2>
+
+- [1. Objetivo](#1-objetivo)
+- [2. Introdução](#2-introdução)
+- [3. Estudo de caso](#3-estudo-de-caso)
+  - [3.1. Testes de tolerância a falhas](#31-testes-de-tolerância-a-falhas)
+  - [3.2. Testes de escalabilidade](#32-testes-de-escalabilidade)
+- [4. Tecnologias habilitadoras](#4-tecnologias-habilitadoras)
+- [5. Pré-requisitos](#5-pré-requisitos)
+- [6. Requisitos mínimos](#6-requisitos-mínimos)
+  - [6.1 CockroachDB](#61-cockroachdb)
+  - [6.2 SingleStore](#62-singlestore)
+- [7. Criar um Cluster Kubernetes](#7-criar-um-cluster-kubernetes)
+- [8. CockroachDB](#8-cockroachdb)
+  - [8.1. Deploy do Operator](#81-deploy-do-operator)
+  - [8.2. Deploy do *cluster*](#82-deploy-do-cluster)
+  - [8.3. Executando comandos SQL](#83-executando-comandos-sql)
+  - [8.4. Testes de tolerância à falhas](#84-testes-de-tolerância-à-falhas)
+  - [8.5. Testes de Escalabilidade](#85-testes-de-escalabilidade)
+- [9. SingleStore](#9-singlestore)
+  - [9.1. Conceitos básicos](#91-conceitos-básicos)
+  - [9.2. Deploy do Operator](#92-deploy-do-operator)
+  - [9.3. Deploy do Cluster](#93-deploy-do-cluster)
+  - [9.4. Acessando o Cluster](#94-acessando-o-cluster)
+  - [9.5. Testes de tolerância à falhas](#95-testes-de-tolerância-à-falhas)
+  - [9.6. Testes de escalabilidade](#96-testes-de-escalabilidade)
+- [10. Benchmark](#10-benchmark)
+- [11. Conclusão](#11-conclusão)
    
 #
-## Objetivo
+## 1. Objetivo
 No contexto de bancos de dados relacionais e distribuídos (NewSQL), temos como objetivo deste projeto planejar e elaborar um tutorial intuitivo que permita a qualquer pessoa interessada testar e validar as características relacionadas a tolerância às falhas e escalabilidade na estrutura de NewSQL.
 
 > Voltar ao: [Sumário](#sumário)
 
-## Introdução
+## 2. Introdução
 
 O NewSQL surgiu como uma nova proposta, pois com o uso do NOSQL acabou apresentando alguns problemas como por exemplo: a falta, do uso de transações, das consultas SQL e a estrutura complexa por não ter uma modelagem estruturada. Ele veio com o objetivo de ter os os pontos positivos dos do modelo relacional para as arquiteturas distribuídas e aumentar o desempenhos das queries de SQL, não tendo a necessidade de servidores mais potentes para melhor execução, e utilizando a escalabilidade vertical e mantendo as propriedades ACID(Atomicidade, Consistência, Isolamento e Durabilidade).
 
 > Voltar ao: [Sumário](#sumário)
 
-## Estudo de caso
+## 3. Estudo de caso
 
 A base de dados *Northwind* é uma base de dados modelo que foi originalmente criada pela Microsoft e utilizada para os seus tutoriais numa variedade de produtos de base de dados durante décadas. A base de dados *Northwind* contém os dados de vendas de uma empresa fictícia chamada *"Northwind Traders"*, que importa e exporta alimentos especializados de todo o mundo. É um excelente esquema de simulação para um ERP de pequenas empresas, com clientes, encomendas, inventário, compras, fornecedores, expedição, empregados, e contabilidade de entrada única. 
 
@@ -73,14 +78,14 @@ Os arquivos para importação da estrutura das tabelas e seus dados estão na pa
 
 Utilizando esses dados iremos criar um cenário para executar os testes descritos abaixo:
 
-- Testes de tolerância a falhas
+### 3.1. Testes de tolerância a falhas
 
   A tolerância à falhas tem como objetivo impedir que alguma mudança da nossa base de dados seja perdida por conta de algum problema, com isso é realizado o método de replicação para que todos os nós tenham as mudanças realizadas, e assim caso um nó tenha algum problema, o outro nó do sistema terá as informações consistentes. 
 
   Sabendo disso, vamos simular alguns casos para você perceber o este funcionamento. 
   Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na prática, para isso vamos efeturar uma operação de atualização(*UPDATE*) em um nó e verificar o que acontece com os outros nós. 
 
-- Testes de escalabilidade
+### 3.2. Testes de escalabilidade
 
   Para o escalonamento do nosso *cluster*, utilizaremos a escalabilidade horizontal, que consiste em utilizar mais equipamentos e existe a partionalização dos dados de acordo com os critérios de cada projeto, diferente do vertical, que consiste em aumentar a capacidade da máquina, porém no horizontal também temos o aumento de capacidade de memória e de processamento, mas isso terá o impacto pela soma das máquinas em funcionamento. 
 
@@ -90,7 +95,7 @@ Utilizando esses dados iremos criar um cenário para executar os testes descrito
 
 > Voltar ao: [Sumário](#sumário)
 
-## Tecnologias que vamos utilizar
+## 4. Tecnologias habilitadoras
 
 - Kubernetes;
 - Docker;
@@ -100,7 +105,7 @@ Utilizando esses dados iremos criar um cenário para executar os testes descrito
 
 > Voltar ao: [Sumário](#sumário)
 
-## Pré-requisitos
+## 5. Pré-requisitos
 
 Antes de começarmos, é necessário que você atente-se à alguns detalhes considerados como pré-requisitos deste tutorial.
 
@@ -110,9 +115,9 @@ Antes de começarmos, é necessário que você atente-se à alguns detalhes cons
 
 > Voltar ao: [Sumário](#sumário)
 
-## Requisitos mínimos
+## 6. Requisitos mínimos
 
-- CockroachDB
+### 6.1 CockroachDB
 
   RECURSO | VALOR
   ------- | -------
@@ -128,7 +133,7 @@ Antes de começarmos, é necessário que você atente-se à alguns detalhes cons
 
 <br>
 
-- SingleStore
+### 6.2 SingleStore
   
   RECURSO | VALOR
   ------- | -------
@@ -147,7 +152,7 @@ Antes de começarmos, é necessário que você atente-se à alguns detalhes cons
  > Voltar ao: [Sumário](#sumário)
 
 
-## Criar um Cluster Kubernetes
+## 7. Criar um Cluster Kubernetes
 
 Para podermos simular um ambiente isolado e que garanta as características de sistemas distribuídos utilizaremos um *cluster* local orquestrado pelo Kubernetes, o qual é responsável por gerenciar instâncias de máquinas virtuais para execução de aplicativos em containers. 
 
@@ -174,7 +179,7 @@ Feito isso, um *cluster* com três nós será criado e inicializado. Em alguns m
 > Voltar ao: [Sumário](#sumário)
 
 #
-## CockroachDB
+## 8. CockroachDB
 
 Antes de iniciar os testes, temos que configurar o CockroachDB no nosso *cluster* e para nos auxiliar utilizamos as documentações do CockroachDB e kubernetes, e citaremos abaixo os comandos que devem ser realizados.
 
@@ -187,7 +192,7 @@ Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele ir�
 
 >Nota: É importante notar que temos um *cluster* kubernetes, composto de três instâncias de máquina virtual (1 *master* e 2 *workers*), onde as *pods* são alocadas e cada uma representa um nó do CockroachDB que está executando. Dessa forma quando falamos sobre os nós do CockroachDB estamos nos referindo as *pods* e quando falamos dos nós do *cluster* estamos falando das instâncias de máquina virtual do Kubernetes.
 
-### 1. Deploy do Operator
+### 8.1. Deploy do Operator
 
 - Definir as autorizações para o Operator gerenciar o *cluster*
 
@@ -234,7 +239,7 @@ Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele ir�
 
   > Nota: Caso o *status* da *pod* estiver como *"ContainerCreating"* é só aguardar alguns instantes que o kubernetes esta iniciando o *container* e logo deverá aparecer como *"Running"*.
 
-### 2. Deploy do *cluster*
+### 8.2. Deploy do *cluster*
   
 - Abra o arquivo `cockroachdb-cluster.yaml` com um editor de texto
 - Esta etapa é opcional, porém extremamente recomendada em ambientes de produção. <br> Vamos configurar a quantidade de CPU e memoria para cada *pod* do *cluster*. Basta procurar no arquivo pelo código abaixo, descomentar as linhas e alterar os valores de `cpu` e `memory`, seguindo a regra de 4GB de memória RAM para cada um núcleo de CPU.
@@ -286,7 +291,7 @@ Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele ir�
       cockroachdb-2                         1/1     Running   0          67s
       
 
-### 3. Executando comandos SQL
+### 8.3. Executando comandos SQL
 
 Feito isso, já temos nosso *cluster* e nossa aplicação configurados e executando, temos que popular nosso banco de dados para realizar os testes. 
 
@@ -329,7 +334,7 @@ Feito isso, já temos nosso *cluster* e nossa aplicação configurados e executa
   
   Abra o arquivo `database/cockroachdb-northwind-tables.sql`, copie a estrutura das tabelas e cole no terminal aberto no passo anterior. Repita o mesmo processo para o arquivo `database/cockroachdb-northwind-data.sql`.
 
-### 4. Testes de tolerância à falhas
+### 8.4. Testes de tolerância à falhas
 
 >Nota: É importante ressaltar que temos um *cluster* kubernetes, composto de três instâncias de máquinas virtuais (3 *workers*), onde as pods são executadas e cada *pod* representa um nó do CockroachDB. Dessa forma quando falamos sobre os nós do CockroachDB estamos nos referindo as *pods* e quando falamos dos nós do *cluster* estamos nos referindo as instâncias de máquina virtual do Kubernetes.
     
@@ -396,7 +401,7 @@ Feito isso, já temos nosso *cluster* e nossa aplicação configurados e executa
       NAME            READY     STATUS    RESTARTS   AGE
       cockroachdb-2   1/1       Running   0          15s
   
-### 5. Testes de Escalabilidade 
+### 8.5. Testes de Escalabilidade 
 
 - Modificar o número de nós do CockroachDB
 
@@ -457,13 +462,13 @@ Feito isso, já temos nosso *cluster* e nossa aplicação configurados e executa
   > Voltar ao: [Sumário](#sumário)
 
 #
-## SingleStore
+## 9. SingleStore
 
 Nesta etapa vamos definir e executar as configurações de deploy do SingleStore em um *cluster* Kubernetes gerenciado pelo GKE, para assim podermos realizar os testes de escalabilidade e tolerância à falhas.
 
 > Nota: importante se atentar que a estrutura é composta em dois níveis: nós agregadores e nós folhas.
 
-### 1. Conceitos básicos
+### 9.1. Conceitos básicos
 Primeiramente precisamos criar nosso cluster e utilizaremos o GKE para isto:
 
 - Acesse a [Google Cloud Console](https://console.cloud.google.com)
@@ -475,7 +480,7 @@ Feito isso, um *cluster* com três nós será criado e inicializado. Em alguns m
 
 > Nota: o teste foi realizado com o *cluster* com as configurações mínimas para rodar o *software* e que os testes serem realizadas. 
 
-### 2. Deploy do Operator
+### 9.2. Deploy do Operator
 
 - [operator-rbac.yaml](https://github.com/bernacamargo/UFSCar-PMD-NewSQL-Tolerancia-a-falhas-e-Escalabilidade/blob/main/singlestore/operator-rbac.yaml)
 
@@ -507,7 +512,7 @@ Feito isso, um *cluster* com três nós será criado e inicializado. Em alguns m
         deployment.apps/memsql-operator created
   > Nota: Neste projeto a imagem utilizada para a criação do *container do operator* é a `memsql/operator:1.2.3-centos-ef2b8561` disponibilizada no Docker Hub pelo SingleScore.
 
-### 3. Deploy do cluster
+### 9.3. Deploy do cluster
 
 Esta é a configuração principal do nosso *cluster*, é através do arquivo `singlestore-cluster.yaml` que iremos definir se nosso *cluster* será replicado e também a quantidade de recursos alocados para cada nó.
 
@@ -604,7 +609,7 @@ O hash existente no arquivo representa a senha `123456`, o qual utilizaremos par
 
 > Nota: Todos os arquivos .yaml acima também estão disponiveis na [documentação do SingleStore](https://docs.SingleStore.com/v7.3/guides/deploy-memsql/self-managed/kubernetes/step-3/).
 
-### 4. Acessando o Cluster
+### 9.4. Acessando o Cluster
 
 - Verificar os serviços criados no *deploy*
 
@@ -663,7 +668,7 @@ O hash existente no arquivo representa a senha `123456`, o qual utilizaremos par
   Abra o arquivo `database/singlestore-northwind-tables.sql`, copie a estrutura das tabelas e cole no terminal aberto no passo anterior. Repita o mesmo processo para o arquivo `database/singlestore-northwind-data.sql`.
 
 
-### 5. Testes de tolerância à falhas
+### 9.5. Testes de tolerância à falhas
 
 
 - Simulando a falha de um nó.
@@ -725,7 +730,7 @@ O hash existente no arquivo representa a senha `123456`, o qual utilizaremos par
 
 
 #
-### 6. Testes de escalabilidade
+### 9.6. Testes de escalabilidade
 
 Primeiramente precisamos abrir o arquivo `singlestore-cluster.yaml`, pois é neste que iremos realizar as configurações de escalabilidade.
 
@@ -799,7 +804,7 @@ Este é o trecho de código que iremos modificar para podermos testar a escalabi
 
 > Voltar ao: [Sumário](#sumário)
 
-## Benchmark
+## 10. Benchmark
 
 Antes da escolha dos softwares que usariamos dentro deste projeto, nos realizamos um *benchmark* para escolher o que mais se encaixava, com isso nós levantamos algumas coisas que seriam essenciais que foram: uma boa documentação que contesse vídeos e bons exemplos, gratuitos ou até mesmo com um valor alto de créditos para testes iniciais e gostariamos que os *softwares* entre si tivessem alguma diferência significativa. 
 
@@ -811,7 +816,7 @@ Já o MemSQL já nos chamou atenção, pois diferente do cockroachdb, ele tem o 
 
 > Voltar ao: [Sumário](#sumário)
 
-## Conclusão
+## 11. Conclusão
 
 Quando iniciamos o projeto já sabiamos que ele seria desafiador, pois muito mais do que a prática envolvida teriamos que provar e exemplificar através dos testes os conceitos e definições tanto do NewSQL como também as particularidades de cada *software*, do kubernetes que escolhemos para nos auxiliar e o *google cloud*, que foi na nossa escolha tanto pela documentação que existe, quanto também com a quantidade de créditos que eles dão para o teste gratuito.
 
