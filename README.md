@@ -34,9 +34,13 @@
 ## Objetivo
 No contexto de bancos de dados relacionais e distribuídos (NewSQL), temos como objetivo deste projeto planejar e elaborar um tutorial intuitivo que permita a qualquer pessoa interessada testar e validar as características relacionadas a tolerância às falhas e escalabilidade na estrutura de NewSQL.
 
+> Voltar ao: [Sumário](#sumário)
+
 ## Introdução
 
 O NewSQL surgiu como uma nova proposta, pois com o uso do NOSQL acabou apresentando alguns problemas como por exemplo: a falta, do uso de transações, das consultas SQL e a estrutura complexa por não ter uma modelagem estruturada. Ele veio com o objetivo de ter os os pontos positivos dos do modelo relacional para as arquiteturas distribuídas e aumentar o desempenhos das queries de SQL, não tendo a necessidade de servidores mais potentes para melhor execução, e utilizando a escalabilidade vertical e mantendo as propriedades ACID(Atomicidade, Consistência, Isolamento e Durabilidade).
+
+> Voltar ao: [Sumário](#sumário)
 
 ## Estudo de caso
 
@@ -62,6 +66,8 @@ Os arquivos para importação da estrutura das tabelas e seus dados estão na pa
 
 > Nota: Os dados foram obtidos no https://github.com/jpwhite3/northwind-MySQL
 
+> Voltar ao: [Sumário](#sumário)
+
 ## Tecnologias que vamos utilizar
 
 - Kubernetes;
@@ -70,6 +76,8 @@ Os arquivos para importação da estrutura das tabelas e seus dados estão na pa
 - CockroachDB;
 - SingleStore;
 
+> Voltar ao: [Sumário](#sumário)
+
 ## Pré-requisitos
 
 Antes de começarmos, é necessário que você atente-se à alguns detalhes considerados como pré-requisitos deste tutorial.
@@ -77,6 +85,8 @@ Antes de começarmos, é necessário que você atente-se à alguns detalhes cons
 - Acesso a internet;
 - Conhecimentos básicos em SQL, Kubernetes, Docker e Google Cloud;
 - Conta no Google Cloud com créditos;
+
+> Voltar ao: [Sumário](#sumário)
 
 ## Recursos necessários
 
@@ -97,6 +107,9 @@ Antes de começarmos, é necessário que você atente-se à alguns detalhes cons
   CPU   | 4 núcleos de vCPU por nó
   Memória | No mínimo 4GB por núcleo de vCPU
   Armazenamento | Pelo menos 3 vezes a quantidade de memória RAM
+  
+ > Voltar ao: [Sumário](#sumário)
+
 
 ## Criar um Cluster Kubernetes
 
@@ -121,6 +134,8 @@ Primeiramente precisamos criar nosso cluster no GKE:
 Feito isso, um cluster com três nós será criado e inicializado. Em alguns momentos você já poderá acessá-lo para seguirmos com as configurações.
 
 > Para ambos os softwares CockroachDB e SingleStore utilizaremos o mesmo processo para inicialização do cluster kubernetes, porém em clusters com configurações diferentes.
+
+> Voltar ao: [Sumário](#sumário)
 
 #
 ## CockroachDB
@@ -413,6 +428,9 @@ Todas essas ações são necessários estudos e estragégias que vão depender d
   Dessa forma todas as requisições feitas à aplicação serão diluídas em mais dois nós (cockroachdb-3 e cockroachdb-4).
 
   >Nota: Para realizar a redução na quantidade de nós basta refazer o procedimento explicado acima diminuindo o número de nós. 
+  
+  > Voltar ao: [Sumário](#sumário)
+
 #
 ## SingleStore
 
@@ -766,6 +784,8 @@ Este é o trecho de código que iremos modificar para podermos testar a escalabi
   ```
       memsqlcluster.memsql.com/memsql-cluster configured
 
+> Voltar ao: [Sumário](#sumário)
+
 ## Benchmark
 
 Antes da escolha dos softawares que usariamos dentro deste projeto, nos realizamos um benchmark para escolher o que mais se encaixava, com isso nós levantamos algumas coisas que seriam essenciais que foram: uma boa documentação que contesse vídeos e bons exemplos, gratuitos ou até mesmo com um valor alto de créditos para testes iniciais e gostariamos que os softwares entre si tivessem alguma diferência significativa. 
@@ -776,6 +796,8 @@ O cockroachdb nos chamou atenção por ser um banco de dados open-source e possu
 
 Já o MemSQL já nos chamou atenção, pois diferente do cockroachdb, ele tem o armazenamento na memória principal e sua estrutura é composta em dois níveis: nós agregadores e nós folhas, porém ela contem algumas barreiras na questão gratuita, isso porque a versão *Developer* não é recomendada para ambientes de produção e possui algumas limitações de recursos, e também possui uma dependência de uma infraestrutura com grande poder de processamento. 
 
+> Voltar ao: [Sumário](#sumário)
+
 ## Conclusão
 
 Quando iniciamos o projeto já sabiamos que ele seria desafiador, pois muito mais do que a prática envolvida teriamos que provar e exemplificar através dos testes os conceitos e definições tanto do NewSQL como também as particularidades de cada software, do kubernetes que escolhemos para nos auxiliar e o google cloud, que foi na nossa escolha tanto pela documentação que existe, quanto também com a quantidade de créditos que eles dão para o teste gratuito.
@@ -783,3 +805,6 @@ Quando iniciamos o projeto já sabiamos que ele seria desafiador, pois muito mai
 Durante o processo tivemos que realizar algumas escolhas, como por exemplo, deixar de simular de maneira local da nossa máquina e partir para o cloud, e com isso tivemos dificuldade com as configurações mínimas de hardware, em particularidade do SingleStore, antigo MemSQL, e assim os cenários que nós imaginavamos que seria o ideal para os testes acabou que teve que ser adaptado para conseguirmos entregar o projeto de acordo com as expectativas.
 
 Com esse trabalho, por fim, finalizamos o projeto com grande aprendizado dos conceitos de tolerância à falhas e escalabilidade e também com um conceito mais básico e prático do funcionamento da cloud. 
+
+> Voltar ao: [Sumário](#sumário)
+
