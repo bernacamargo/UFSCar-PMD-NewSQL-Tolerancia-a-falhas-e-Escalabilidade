@@ -1,8 +1,11 @@
 <h1>NewSQL - Tolerância à falha e escalabilidade com CockroachDB e SingleStore</h1>
 
 ## Autores
-- Bernardo Pinheiro Camargo [@bernacamargo](https://github.com/bernacamargo)
-- Renata Praisler [@RenataPraisler](https://github.com/RenataPraisler)
+<h4> - Bernardo Pinheiro Camargo [@bernacamargo](https://github.com/bernacamargo)</h4>
+<h4> - Renata Praisler [@RenataPraisler](https://github.com/RenataPraisler)</h4>
+
+- Profª Drª Sahudy Montenegro
+- Disciplina de Processamento Massivo de Dados - UFSCAR SOROCABA
 
 ## Sumário
 - [Autores](#autores)
