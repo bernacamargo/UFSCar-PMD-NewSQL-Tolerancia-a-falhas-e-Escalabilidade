@@ -59,12 +59,33 @@ A seguir o diagrama de relacionamento das tabelas:
 
 ![](https://docs.yugabyte.com/images/sample-data/northwind/northwind-er-diagram.png)
 
+<center>
+  <sub>Figura 1: Diagrama de relacionamento do banco Northwind<</sub>
+</center>
+<br>
 
 Os arquivos para importação da estrutura das tabelas e seus dados estão na pasta `database`
 - [database/northwind-tables](https://raw.githubusercontent.com/bernacamargo/UFSCar-PMD-NewSQL-Tolerancia-a-falhas-e-Escalabilidade/main/database/northwind-tables.sql)
 - [database/northwind-data](https://raw.githubusercontent.com/bernacamargo/UFSCar-PMD-NewSQL-Tolerancia-a-falhas-e-Escalabilidade/main/database/northwind-data.sql)
 
 > Nota: Os dados foram obtidos no https://github.com/jpwhite3/northwind-MySQL
+
+Utilizando esses dados iremos criar um cenário para executar os testes descritos abaixo:
+
+- Testes de tolerância a falhas
+
+  A tolerância à falhas tem como objetivo impedir que alguma mudança da nossa base de dados seja perdida por conta de algum problema, com isso é realizado o método de replicação para que todos os nós tenham as mudanças realizadas, e assim caso um nó tenha algum problema, o outro nó do sistema terá as informações consistentes. 
+
+  Sabendo disso, vamos simular alguns casos para você perceber o este funcionamento. 
+  Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na prática, para isso vamos efeturar uma operação de atualização(*UPDATE*) em um nó e verificar o que acontece com os outros nós. 
+
+- Testes de escalabilidade
+
+  Para o escalonamento do nosso *cluster*, utilizaremos a escalabilidade horizontal, que consiste em utilizar mais equipamentos e existe a partionalização dos dados de acordo com os critérios de cada projeto, diferente do vertical, que consiste em aumentar a capacidade da máquina, porém no horizontal também temos o aumento de capacidade de memória e de processamento, mas isso terá o impacto pela soma das máquinas em funcionamento. 
+
+  Para entender o motivo que precisamos realizar este escalonamento, vamos supor que existe uma necessidade de processamento maior dos dados num período de tempo, como por exemplo a *black friday* (data em novemembro em que o comércio realiza descontos em cima de produtos), para isso seja necessário um aumento de quantidade de máquina para que não tenha impacto no processamento para o cliente final, mas em outras datas não tenha o mesmo volume de acesso, então podemos reduzir também nossas pods para que tenha uma redução no valor de processamento. 
+
+  Todas essas ações são necessários estudos e estragégias que vão depender do propósito e abordagem desejada para cada projeto, por isso é importante se aprofundar para analisar os impactos positivos de cada ação, para que isso não atinja o usuário final.
 
 > Voltar ao: [Sumário](#sumário)
 
@@ -88,26 +109,40 @@ Antes de começarmos, é necessário que você atente-se à alguns detalhes cons
 
 > Voltar ao: [Sumário](#sumário)
 
-## Recursos necessários
+## Requisitos mínimos
 
 - CockroachDB
 
-  RECURSO | RECOMENDAÇÃO
+  RECURSO | VALOR
   ------- | -------
+  Nós do cluster | 3
   CPU   | 2 núcleos de vCPU por nó
   Memória | No mínimo 4GB por núcleo de vCPU
   Armazenamento | Cada nó deve ter pelo menos 150GB por núcleo de vCPU
+
+<center>
+  <sub>Tabela 1: Recomendações de configurações para o cluster CockroachDB</sub>
+</center>
+<br>
 
 <br>
 
 - SingleStore
   
-  RECURSO | RECOMENDAÇÃO
+  RECURSO | VALOR
   ------- | -------
+  Nós do cluster | 3
   CPU   | 4 núcleos de vCPU por nó
   Memória | No mínimo 4GB por núcleo de vCPU
   Armazenamento | Pelo menos 3 vezes a quantidade de memória RAM
   
+<center>
+  <sub>Tabela 2: Recomendações de configurações para o cluster SingleStore</sub>
+</center>
+<br>
+
+> Nota: Para calcular os requisitos mínimos para o host do cluster basta multiplicar o recurso pela quantidade de nós.
+
  > Voltar ao: [Sumário](#sumário)
 
 
@@ -297,11 +332,6 @@ Feito isso, já temos nosso *cluster* e nossa aplicação configurados e executa
 
 >Nota: É importante ressaltar que temos um *cluster* kubernetes, composto de três instâncias de máquinas virtuais (3 *workers*), onde as pods são executadas e cada *pod* representa um nó do CockroachDB. Dessa forma quando falamos sobre os nós do CockroachDB estamos nos referindo as *pods* e quando falamos dos nós do *cluster* estamos nos referindo as instâncias de máquina virtual do Kubernetes.
     
-A tolerância à falhas tem como objetivo impedir que alguma mudança da nossa base de dados seja perdida por conta de algum problema, com isso é realizado o método de replicação para que todos os nós tenham as mudanças realizadas, e assim caso um nó tenha algum problema, o outro nó do sistema terá as informações consistentes. 
-
-Sabendo disso, vamos simular alguns casos para você perceber o este funcionamento. 
-Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na prática, para isso vamos efeturar uma operação de atualização(*UPDATE*) em um nó e verificar o que acontece com os outros nós. 
-
 - Replicação de dados
 
   Primeiramente faça a importação dos arquivos disponibilizados na pasta [database](https://github.com/bernacamargo/UFSCar-PMD-NewSQL-Tolerancia-a-falhas-e-Escalabilidade/tree/main/database). 
@@ -365,13 +395,7 @@ Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na
       NAME            READY     STATUS    RESTARTS   AGE
       cockroachdb-2   1/1       Running   0          15s
   
-### 5. Testes de Escalabilidade
-
-Para o escalonamento do nosso *cluster*, utilizaremos a escalabilidade horizontal, que consiste em utilizar mais equipamentos e existe a partionalização dos dados de acordo com os critérios de cada projeto, diferente do vertical, que consiste em aumentar a capacidade da máquina, porém no horizontal também temos o aumento de capacidade de memória e de processamento, mas isso terá o impacto pela soma das máquinas em funcionamento. 
-
-Para entender o motivo que precisamos realizar este escalomamento, vamos supor que existe uma necessidade de processamento maior dos dados num período de tempo, como por exemplo a *black friday* (data em novemembro em que o comércio realiza descontos em cima de produtos), para isso seja necessário um aumento de quantidade de máquina para que não tenha impacto no processamento para o cliente final, mas em outras datas não tenha o mesmo volume de acesso, então podemos reduzir também nossas pods para que tenha uma redução no valor de processamento. 
-
-Todas essas ações são necessários estudos e estragégias que vão depender do propósito e abordagem desejada para cada projeto, por isso é importante se aprofundar para analisar os impactos positivos de cada ação, para que isso não atinja o usuário final. 
+### 5. Testes de Escalabilidade 
 
 - Modificar o número de nós do CockroachDB
 
@@ -640,12 +664,6 @@ O hash existente no arquivo representa a senha `123456`, o qual utilizaremos par
 
 ### 5. Testes de tolerância à falhas
 
-Relembrando o objetivo da tolerância à falhas, ela impede que alguma mudança da nossa base de dados seja perdida por conta de algum problema, com isso é realizado o método de replicação para que todos os nós tenham as mudanças realizadas, e assim caso um nó tenha algum problema, o outro nó do sistema terá as informações consistentes. 
-
-Sabendo disso, vamos simular alguns casos para você perceber o este funcionamento, antes de simular uma falha do nó, vamos passar pelo conceito da replicação na prática.
-
-Diferentemente do cockroach, em que configuramos um *cluster* totalmente replicado, no SingleStore temos um cluster gerenciado pelo nó master e seus dados armazenados e particionados em seus nós folha. Dessa forma só devemos realizar as operações de dados no nosso nó master, e assim a partição será realizada nas folhas através dos nossos agregadores, assim qualquer consulta que é feita pelo nó master, é processados pelos nós folhas. Isso ficará mais claro na prática, que demostraremos abaixo.
-
 
 - Simulando a falha de um nó.
    
@@ -707,12 +725,6 @@ Diferentemente do cockroach, em que configuramos um *cluster* totalmente replica
 
 #
 ### 6. Testes de escalabilidade
-
-O escalonamento do *cluster* será executado baseado no conceito de escalabilidade vertical. Este conceito representa o aumentar a capacidade dos recursos de uma mesma máquina. Em nosso contexto a escalabilidade vertical vai ser aplicada através da manipulação da quantidade de instâncias do banco de dados(*pods*).
-
-<!-- Para o escalonamento do nosso *cluster*, utilizaremos a escalabilidade horizontal, que consiste em utilizar mais equipamentos e existe a partionalização dos dados de acordo com os critérios de cada projeto, diferente do vertical, que consiste em aumentar a capacidade da máquina, porém no horizontal também temos o aumento de capacidade de memória e de processamento, mas isso terá o impacto pela soma das máquinas em funcionamento.  -->
-
-Como fizemos o *deploy* do *cluster* SingleStore utilizando um Operator, toda escalabilidade será realizada modificando o arquivo de configuração do *cluster* e realizando seu *deploy* novamente.
 
 Primeiramente precisamos abrir o arquivo `singlestore-cluster.yaml`, pois é neste que iremos realizar as configurações de escalabilidade.
 
@@ -788,7 +800,7 @@ Este é o trecho de código que iremos modificar para podermos testar a escalabi
 
 ## Benchmark
 
-Antes da escolha dos softawares que usariamos dentro deste projeto, nos realizamos um *benchmark* para escolher o que mais se encaixava, com isso nós levantamos algumas coisas que seriam essenciais que foram: uma boa documentação que contesse vídeos e bons exemplos, gratuitos ou até mesmo com um valor alto de créditos para testes iniciais e gostariamos que os *softwares* entre si tivessem alguma diferência significativa. 
+Antes da escolha dos softwares que usariamos dentro deste projeto, nos realizamos um *benchmark* para escolher o que mais se encaixava, com isso nós levantamos algumas coisas que seriam essenciais que foram: uma boa documentação que contesse vídeos e bons exemplos, gratuitos ou até mesmo com um valor alto de créditos para testes iniciais e gostariamos que os *softwares* entre si tivessem alguma diferência significativa. 
 
 Após esses critérios criados, nos escolhemos o cockroachdb e o single store(antigo MemSQL).
 
