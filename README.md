@@ -1,11 +1,9 @@
 <h1>NewSQL - Tolerância à falha e escalabilidade com CockroachDB e SingleStore</h1>
+Projeto desenvolvido na disciplina de Processamento Massivo de Dados na UFSCar Sorocaba, ministrada pela Profª Drª Sahudy Montenegro
 
 ## Autores
 <h4> - Bernardo Pinheiro Camargo [@bernacamargo](https://github.com/bernacamargo)</h4>
 <h4> - Renata Praisler [@RenataPraisler](https://github.com/RenataPraisler)</h4>
-
-- Profª Drª Sahudy Montenegro
-- Disciplina de Processamento Massivo de Dados - UFSCAR SOROCABA
 
 ## Sumário
 - [Autores](#autores)
