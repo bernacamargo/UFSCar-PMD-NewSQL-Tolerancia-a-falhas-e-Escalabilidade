@@ -44,16 +44,16 @@ O NewSQL surgiu como uma nova proposta, pois com o uso do NOSQL acabou apresenta
 
 ## Estudo de caso
 
-A base de dados Northwind é uma base de dados modelo que foi originalmente criada pela Microsoft e utilizada para os seus tutoriais numa variedade de produtos de base de dados durante décadas. A base de dados Northwind contém os dados de vendas de uma empresa fictícia chamada "Northwind Traders", que importa e exporta alimentos especializados de todo o mundo. É um excelente esquema de simulação para um ERP de pequenas empresas, com clientes, encomendas, inventário, compras, fornecedores, expedição, empregados, e contabilidade de entrada única. 
+A base de dados *Northwind* é uma base de dados modelo que foi originalmente criada pela Microsoft e utilizada para os seus tutoriais numa variedade de produtos de base de dados durante décadas. A base de dados *Northwind* contém os dados de vendas de uma empresa fictícia chamada *"Northwind Traders"*, que importa e exporta alimentos especializados de todo o mundo. É um excelente esquema de simulação para um ERP de pequenas empresas, com clientes, encomendas, inventário, compras, fornecedores, expedição, empregados, e contabilidade de entrada única. 
 
 O conjunto de dados inclui as seguintes tabelas:
 
-- Suppliers: Fornecedores e vendedores de Northwind
-- Customers: Clientes que compram produtos da Northwind
-- Employees: Detalhes dos empregados dos comerciantes de Northwind
-- Products: Informação sobre produtos
-- Shippers: Os detalhes dos expedidores que enviam os produtos dos comerciantes para os clientes finais
-- Orders e Order_Details: Transações de ordens de venda que ocorrem entre os clientes e a empresa
+- *Suppliers:* Fornecedores e vendedores de *Northwind*
+- *Customers:* Clientes que compram produtos da *Northwind*
+- *Employees:* Detalhes dos empregados dos comerciantes de *Northwind*
+- *Products:* Informação sobre produtos
+- *Shippers:* Os detalhes dos expedidores que enviam os produtos dos comerciantes para os clientes finais
+- *Orders e Order_Details:* Transações de ordens de venda que ocorrem entre os clientes e a empresa
 
 A seguir o diagrama de relacionamento das tabelas:
 
@@ -113,17 +113,17 @@ Antes de começarmos, é necessário que você atente-se à alguns detalhes cons
 
 ## Criar um Cluster Kubernetes
 
-Para podermos simular um ambiente isolado e que garanta as características de sistemas distribuídos utilizaremos um cluster local orquestrado pelo Kubernetes, o qual é responsável por gerenciar instâncias de máquinas virtuais para execução de aplicativos em containers. 
+Para podermos simular um ambiente isolado e que garanta as características de sistemas distribuídos utilizaremos um *cluster* local orquestrado pelo Kubernetes, o qual é responsável por gerenciar instâncias de máquinas virtuais para execução de aplicativos em containers. 
 
-Neste projeto utilizaremos o GKE para gerenciar e hospedar nossos dois clusters Kubernetes, contudo é possível realizar o procedimento com qualquer outra vertente de cluster, como AWS, Microsoft Azure ou um cluster local. Atente-se nas configurações mínimas para executar cada aplicação.
+Neste projeto utilizaremos o GKE para gerenciar e hospedar nossos dois *clusters* Kubernetes, contudo é possível realizar o procedimento com qualquer outra vertente de *cluster*, como AWS, Microsoft Azure ou um *cluster* local. Atente-se nas configurações mínimas para executar cada aplicação.
 
-Primeiramente precisamos criar nosso cluster no GKE:
+Primeiramente precisamos criar nosso *cluster* no GKE:
 
 - Acesse a [Google Cloud Console](https://console.cloud.google.com)
 - No menu da esqueda, navegue até `Kubernetes Engine` e clique em `Clusters`;
 - Clique em `Criar cluster` no centro da janela;
-- Defina o nome do cluster;
-- Configure a quantidade de recursos do cluster;
+- Defina o nome do *cluster*;
+- Configure a quantidade de recursos do *cluster*;
   - Clique em `Pools dos nós` para expandir o menu;
   - Clique em `Nós`;
   - Procure pelo campo `Tipo de máquina` e clique para expandir as opções;
@@ -131,29 +131,29 @@ Primeiramente precisamos criar nosso cluster no GKE:
 - Clique em `Criar`.
   
 
-Feito isso, um cluster com três nós será criado e inicializado. Em alguns momentos você já poderá acessá-lo para seguirmos com as configurações.
+Feito isso, um *cluster* com três nós será criado e inicializado. Em alguns momentos você já poderá acessá-lo para seguirmos com as configurações.
 
-> Para ambos os softwares CockroachDB e SingleStore utilizaremos o mesmo processo para inicialização do cluster kubernetes, porém em clusters com configurações diferentes.
+> Para ambos os softwares CockroachDB e SingleStore utilizaremos o mesmo processo para inicialização do *cluster* kubernetes, porém em *clusters* com configurações diferentes.
 
 > Voltar ao: [Sumário](#sumário)
 
 #
 ## CockroachDB
 
-Antes de iniciar os testes, temos que configurar o CockroachDB no nosso cluster e para nos auxiliar utilizamos as documentações do CockroachDB e kubernetes, e citaremos abaixo os comandos que devem ser realizados.
+Antes de iniciar os testes, temos que configurar o CockroachDB no nosso *cluster* e para nos auxiliar utilizamos as documentações do CockroachDB e kubernetes, e citaremos abaixo os comandos que devem ser realizados.
 
-Para configurar a aplicação do CockroachDB dentro do cluster podemos fazer de algumas formas:
+Para configurar a aplicação do CockroachDB dentro do *cluster* podemos fazer de algumas formas:
 - [Usando o Operator](https://kubernetes.io/pt/docs/concepts/extend-kubernetes/operator/)
 - [Usando o Helm](https://helm.sh/)
 - Usando arquivos de configurações sem ferramentas automatizadoras.
 
-Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele irá automatizar diversas configuração do cluster.
+Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele irá automatizar diversas configuração do *cluster*.
 
->Nota: É importante notar que temos um cluster kubernetes, composto de três instâncias de máquina virtual (1 master e 2 workers), onde as pods são alocadas e cada uma representa um nó do CockroachDB que está executando. Dessa forma quando falamos sobre os nós do CockroachDB estamos nos referindo as pods e quando falamos dos nós do cluster estamos falando das instâncias de máquina virtual do Kubernetes.
+>Nota: É importante notar que temos um *cluster* kubernetes, composto de três instâncias de máquina virtual (1 *master* e 2 *workers*), onde as *pods* são alocadas e cada uma representa um nó do CockroachDB que está executando. Dessa forma quando falamos sobre os nós do CockroachDB estamos nos referindo as *pods* e quando falamos dos nós do *cluster* estamos falando das instâncias de máquina virtual do Kubernetes.
 
 ### 1. Deploy do Operator
 
-- Definir as autorizações para o Operator gerenciar o cluster
+- Definir as autorizações para o Operator gerenciar o *cluster*
 
   ```shell
   $ kubectl apply -f cockroachdb/operator-rbac.yaml
@@ -164,7 +164,7 @@ Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele ir�
       serviceaccount/cockroach-operator-sa created
       clusterrolebinding.rbac.authorization.k8s.io/cockroach-operator-default created
 
-- Criar o CustomResourceDefinition (CRD) para o Operator
+- Criar o *CustomResourceDefinition* (CRD) para o Operator
 
   ```shell
   $ kubectl apply -f cockroachdb/operator-crd.yaml
@@ -174,9 +174,9 @@ Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele ir�
 
       customresourcedefinition.apiextensions.k8s.io/crdbclusters.crdb.cockroachlabs.com created
 
-  > Nota: É interessante notar que o operator irá ser executado como uma pod do cluster.
+  > Nota: É interessante notar que o operator irá ser executado como uma *pod* do *cluster*.
 
-- Criar o Controller do Operator
+- Criar o *Controller* do *Operator*
 
   ```shell
   $ kubectl apply -f cockroachdb/operator-deploy.yaml
@@ -186,7 +186,7 @@ Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele ir�
 
       deployment.apps/cockroach-operator created
 
-- Validar se o Operator está executando
+- Validar se o *Operator* está executando
 
   ```shell
   $ kubectl get pods
@@ -196,12 +196,12 @@ Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele ir�
       NAME                                 READY   STATUS    RESTARTS   AGE
       cockroach-operator-6867445556-9x6zp   1/1    Running      0      2m51s
 
-  > Nota: Caso o status da pod estiver como "ContainerCreating" é só aguardar alguns instantes que o kubernetes esta iniciando o container e logo deverá aparecer como "Running".
+  > Nota: Caso o *status* da *pod* estiver como *"ContainerCreating"* é só aguardar alguns instantes que o kubernetes esta iniciando o *container* e logo deverá aparecer como *"Running"*.
 
-### 2. Deploy do cluster
+### 2. Deploy do *cluster*
   
 - Abra o arquivo `cockroachdb-cluster.yaml` com um editor de texto
-- Esta etapa é opcional, porém extremamente recomendada em ambientes de produção. <br> Vamos configurar a quantidade de CPU e memoria para cada pod do cluster. Basta procurar no arquivo pelo código abaixo, descomentar as linhas e alterar os valores de `cpu` e `memory`, seguindo a regra de 4GB de memória RAM para cada um núcleo de CPU.
+- Esta etapa é opcional, porém extremamente recomendada em ambientes de produção. <br> Vamos configurar a quantidade de CPU e memoria para cada *pod* do *cluster*. Basta procurar no arquivo pelo código abaixo, descomentar as linhas e alterar os valores de `cpu` e `memory`, seguindo a regra de 4GB de memória RAM para cada um núcleo de CPU.
 
   ```yaml
   resources:
@@ -214,9 +214,9 @@ Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele ir�
           memory: "8Gi"
   ```
 
-  > Nota: Caso não defina nenhum valor inicial a aplicação extendera seus limites de uso de cpu/memoria até o limite do nó do cluster. 
+  > Nota: Caso não defina nenhum valor inicial a aplicação extendera seus limites de uso de cpu/memoria até o limite do nó do *cluster*. 
           
-- Modifique a quantidade de armazenamento cada pod terá, altere o valor do campo `storage` seguindo a regra de 150GB por núcleo de CPU.
+- Modifique a quantidade de armazenamento cada *pod* terá, altere o valor do campo `storage` seguindo a regra de 150GB por núcleo de CPU.
   ```yaml
   resources:
       requests:
@@ -233,9 +233,9 @@ Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele ir�
 
       crdbcluster.crdb.cockroachlabs.com/CockroachDB created    
 
-  > Nota: Este arquivo irá solicitar para o Operador que crie uma aplicação StatefulSet com três pods que funcionarão como um cluster CockroachDB.
+  > Nota: Este arquivo irá solicitar para o *Operador* que crie uma aplicação *StatefulSet* com três *pods* que funcionarão como um *cluster* CockroachDB.
 
-- Aguarde alguns minutos e verifique se as pods estão sendo executadas.
+- Aguarde alguns minutos e verifique se as *pods* estão sendo executadas.
 
   ```shell
   $ kubectl get pods
@@ -252,9 +252,9 @@ Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele ir�
 
 ### 3. Executando comandos SQL
 
-Feito isso, já temos nosso cluster e nossa aplicação configurados e executando, temos que popular nosso banco de dados para realizar os testes. 
+Feito isso, já temos nosso *cluster* e nossa aplicação configurados e executando, temos que popular nosso banco de dados para realizar os testes. 
 
-- Acesse o bash de uma das pods que estão executando a aplicação
+- Acesse o bash de uma das *pods* que estão executando a aplicação
 
   ```shell
   $ kubectl exec -it cockroachdb-2 -- bash
@@ -262,7 +262,7 @@ Feito isso, já temos nosso cluster e nossa aplicação configurados e executand
 
   > Nota: Para alterar qual pod voce está acessando basta alterar a parte do comando `cockroachdb-2` para o nome da pod que você deseja acessar.
 
-- Dentro da pod inicialize o [build-in SQL client](https://www.cockroachlabs.com/docs/v20.2/cockroach-sql) do cockroach
+- Dentro da pod inicialize o [build-in SQL client](https://www.cockroachlabs.com/docs/v20.2/cockroach-sql) do *cockroach*
 
   ```shell
   $ cockroach sql --certs-dir cockroach-certs
@@ -293,14 +293,14 @@ Feito isso, já temos nosso cluster e nossa aplicação configurados e executand
   
   Abra o arquivo `database/cockroachdb-northwind-tables.sql`, copie a estrutura das tabelas e cole no terminal aberto no passo anterior. Repita o mesmo processo para o arquivo `database/cockroachdb-northwind-data.sql`.
 
-### 4. Testes de tolerância a falhas
+### 4. Testes de tolerância à falhas
 
->Nota: É importante ressaltar que temos um cluster kubernetes, composto de três instâncias de máquinas virtuais (3 workers), onde as pods são executadas e cada pod representa um nó do CockroachDB. Dessa forma quando falamos sobre os nós do CockroachDB estamos nos referindo as pods e quando falamos dos nós do cluster estamos nos referindo as instâncias de máquina virtual do Kubernetes.
+>Nota: É importante ressaltar que temos um *cluster* kubernetes, composto de três instâncias de máquinas virtuais (3 *workers*), onde as pods são executadas e cada *pod* representa um nó do CockroachDB. Dessa forma quando falamos sobre os nós do CockroachDB estamos nos referindo as *pods* e quando falamos dos nós do *cluster* estamos nos referindo as instâncias de máquina virtual do Kubernetes.
     
 A tolerância à falhas tem como objetivo impedir que alguma mudança da nossa base de dados seja perdida por conta de algum problema, com isso é realizado o método de replicação para que todos os nós tenham as mudanças realizadas, e assim caso um nó tenha algum problema, o outro nó do sistema terá as informações consistentes. 
 
 Sabendo disso, vamos simular alguns casos para você perceber o este funcionamento. 
-Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na prática, para isso vamos efeturar uma operação de atualização(UPDATE) em um nó e verificar o que acontece com os outros nós. 
+Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na prática, para isso vamos efeturar uma operação de atualização(*UPDATE*) em um nó e verificar o que acontece com os outros nós. 
 
 - Replicação de dados
 
@@ -340,9 +340,9 @@ Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na
       --------------+----------------+------------+----------
                   1 | Exotic Liquids | Indaiatuba | BR
 
-  Como podemos observar, a atualização foi realizada e também foi replicada para as outras pods. Dessa forma podemos realizar este mesmo teste com as outras pods e veremos que todas estão sincronizadas.
+  Como podemos observar, a atualização foi realizada e também foi replicada para as outras *pods*. Dessa forma podemos realizar este mesmo teste com as outras pods e veremos que todas estão sincronizadas.
 
-- Simulando a falha de uma pod.
+- Simulando a falha de uma *pod*.
    
   Vamos deletar um nó do CockroachDB utilizando o comando abaixo:
     
@@ -354,9 +354,9 @@ Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na
 
       pod "cockroachdb-2" deleted
 
-  O que é interessante, é que no arquivo `cockroachdb-cluster.yaml`, definimos que teremos `3 nodes` executando o CockroachDB. Então quando deletamos o nó 2, o Kubernets irá verificar que o nó 2 teve uma falha, e  automaticamente reiciciará a pod e atualizará os dados baseados nos outros nós.
+  O que é interessante, é que no arquivo `cockroachdb-cluster.yaml`, definimos que teremos `3 nodes` executando o CockroachDB. Então quando deletamos o nó 2, o Kubernets irá verificar que o nó 2 teve uma falha, e  automaticamente reiciciará a *pod* e atualizará os dados baseados nos outros nós.
 
-  Executando esse comando no terminal, verificamos que a pod já foi reiniciada e esta com o **status: Running**. 
+  Executando esse comando no terminal, verificamos que a *pod* já foi reiniciada e esta com o **status: Running**. 
           
   ```shell
   $ kubectl get pod cockroachdb-2
@@ -367,9 +367,9 @@ Antes de simular uma falha do nó, vamos passar pelo conceito da replicação na
   
 ### 5. Testes de Escalabilidade
 
-Para o escalonamento do nosso cluster, utilizaremos a escalabilidade horizontal, que consiste em utilizar mais equipamentos e existe a partionalização dos dados de acordo com os critérios de cada projeto, diferente do vertical, que consiste em aumentar a capacidade da máquina, porém no horizontal também temos o aumento de capacidade de memória e de processamento, mas isso terá o impacto pela soma das máquinas em funcionamento. 
+Para o escalonamento do nosso *cluster*, utilizaremos a escalabilidade horizontal, que consiste em utilizar mais equipamentos e existe a partionalização dos dados de acordo com os critérios de cada projeto, diferente do vertical, que consiste em aumentar a capacidade da máquina, porém no horizontal também temos o aumento de capacidade de memória e de processamento, mas isso terá o impacto pela soma das máquinas em funcionamento. 
 
-Para entender o motivo que precisamos realizar este escalomamento, vamos supor que existe uma necessidade de processamento maior dos dados num período de tempo, como por exemplo a black friday (data em novemembro em que o comércio realiza descontos em cima de produtos), para isso seja necessário um aumento de quantidade de máquina para que não tenha impacto no processamento para o cliente final, mas em outras datas não tenha o mesmo volume de acesso, então podemos reduzir também nossas pods para que tenha uma redução no valor de processamento. 
+Para entender o motivo que precisamos realizar este escalomamento, vamos supor que existe uma necessidade de processamento maior dos dados num período de tempo, como por exemplo a *black friday* (data em novemembro em que o comércio realiza descontos em cima de produtos), para isso seja necessário um aumento de quantidade de máquina para que não tenha impacto no processamento para o cliente final, mas em outras datas não tenha o mesmo volume de acesso, então podemos reduzir também nossas pods para que tenha uma redução no valor de processamento. 
 
 Todas essas ações são necessários estudos e estragégias que vão depender do propósito e abordagem desejada para cada projeto, por isso é importante se aprofundar para analisar os impactos positivos de cada ação, para que isso não atinja o usuário final. 
 
@@ -409,7 +409,7 @@ Todas essas ações são necessários estudos e estragégias que vão depender d
 
   >Nota: O comando `apply` do Kubernetes permite que alteremos a configuração inicial da aplicação do CockroachDB sem que seja necessário reinicia-la.
 
-  Podemos verificar que nossa aplicação foi escalonada através das pods existentes
+  Podemos verificar que nossa aplicação foi escalonada através das *pods* existentes
 
   ```shell
   $ kubectl get pods
@@ -434,7 +434,7 @@ Todas essas ações são necessários estudos e estragégias que vão depender d
 #
 ## SingleStore
 
-Nesta etapa vamos definir e executar as configurações de deploy do SingleStore em um cluster Kubernetes gerenciado pelo GKE, para assim podermos realizar os testes de escalabilidade e tolerância a falhas.
+Nesta etapa vamos definir e executar as configurações de deploy do SingleStore em um *cluster* Kubernetes gerenciado pelo GKE, para assim podermos realizar os testes de escalabilidade e tolerância à falhas.
 
 > Nota: importante se atentar que a estrutura é composta em dois níveis: nós agregadores e nós folhas.
 
@@ -446,15 +446,15 @@ Primeiramente precisamos criar nosso cluster e utilizaremos o GKE para isto:
 - Clique em `Criar cluster` no centro da janela;
 - Defina o nome do cluster e clique em `Criar`.
 
-Feito isso, um cluster com três nós será criado e inicializado. Em alguns momentos você já poderá acessá-lo para seguirmos com as configurações.
+Feito isso, um *cluster* com três nós será criado e inicializado. Em alguns momentos você já poderá acessá-lo para seguirmos com as configurações.
 
-> Nota: o teste foi realizado com o cluster com as configurações mínimas para rodar o software e que os testes serem realizadas. 
+> Nota: o teste foi realizado com o *cluster* com as configurações mínimas para rodar o *software* e que os testes serem realizadas. 
 
 ### 2. Deploy do Operator
 
 - [operator-rbac.yaml](https://github.com/bernacamargo/UFSCar-PMD-NewSQL-Tolerancia-a-falhas-e-Escalabilidade/blob/main/singlestore/operator-rbac.yaml)
 
-  Essa configuração irá criar a definição de um ServiceAccount para o MemSQL Operator utilizar.
+  Essa configuração irá criar a definição de um *ServiceAccount* para o MemSQL *Operator* utilizar.
   ```shell
   $ kubectl apply -f singlestore/operator-rbac.yaml
   ```
@@ -465,7 +465,7 @@ Feito isso, um cluster com três nós será criado e inicializado. Em alguns mom
 
 - [operator-crd.yaml](https://github.com/bernacamargo/UFSCar-PMD-NewSQL-Tolerancia-a-falhas-e-Escalabilidade/blob/main/singlestore/operator-crd.yaml)
 
-  Define um recurso específico MemSQLCluster como um tipo de recurso para ser utilizado pelo Operator.
+  Define um recurso específico *MemSQLCluster* como um tipo de recurso para ser utilizado pelo *Operator*.
 
   ```shell
   $ kubectl apply -f singlestore/operator-crd.yaml
@@ -474,17 +474,17 @@ Feito isso, um cluster com três nós será criado e inicializado. Em alguns mom
 
 - [operator-deploy.yaml](https://github.com/bernacamargo/UFSCar-PMD-NewSQL-Tolerancia-a-falhas-e-Escalabilidade/blob/main/singlestore/operator-deploy.yaml)
 
-  Realiza o deploy do Operator, iniciando uma pod para executa-lo.
+  Realiza o deploy do *Operator*, iniciando uma pod para executa-lo.
   ```shell
     $ kubectl apply -f singlestore/operator-deploy.yaml
     ```
 
         deployment.apps/memsql-operator created
-  > Nota: Neste projeto a imagem utilizada para a criação do container do operator é a `memsql/operator:1.2.3-centos-ef2b8561` disponibilizada no Docker Hub pelo SingleScore.
+  > Nota: Neste projeto a imagem utilizada para a criação do *container do operator* é a `memsql/operator:1.2.3-centos-ef2b8561` disponibilizada no Docker Hub pelo SingleScore.
 
 ### 3. Deploy do cluster
 
-Esta é a configuração principal do nosso cluster, é através do arquivo `singlestore-cluster.yaml` que iremos definir se nosso cluster será replicado e também a quantidade de recursos alocados para cada nó.
+Esta é a configuração principal do nosso *cluster*, é através do arquivo `singlestore-cluster.yaml` que iremos definir se nosso *cluster* será replicado e também a quantidade de recursos alocados para cada nó.
 
 ```yaml
 apiVersion: memsql.com/v1alpha1
@@ -534,7 +534,7 @@ spec:
 
 Neste arquivo você precisará fazer algumas alterações:
 
-- Altere o campo `name` para o nome do seu cluster;
+- Altere o campo `name` para o nome do seu *cluster*;
 - Altere o campo `license` e substitua `LICENSE_KEY` pela sua [licença do SingleStore](https://portal.SingleStore.com/licenses);
 - Defina no campo `adminHashedPassword` sua senha encriptografada para o usuário `admin`
 O hash existente no arquivo representa a senha `123456`, o qual utilizaremos para esse tutorial. Caso queira criar uma senha utilize o seguinte algoritmo:
@@ -548,7 +548,7 @@ O hash existente no arquivo representa a senha `123456`, o qual utilizaremos par
 - Os campos `storageGB` definem a quantidade de armazenamento que será solicitado para cada volume persistente nos nós.
 
 
-- Aguarde a pod chamada "memsql-operator" ter seu status como `Running`
+- Aguarde a *pod* chamada "memsql-operator" ter seu *status* como `Running`
 
   ```shell
   $ kubectl get pods
@@ -556,7 +556,7 @@ O hash existente no arquivo representa a senha `123456`, o qual utilizaremos par
       NAME                               READY   STATUS    RESTARTS   AGE
       memsql-operator-5f4b595f89-hfqzt   1/1     Running   0          14s
 
-- Realizar o deploy do cluster MemSQL.
+- Realizar o deploy do *cluster* MemSQL.
 
   ```shell
   $ kubectl apply -f singlestore/singlestore-cluster.yaml
@@ -575,13 +575,13 @@ O hash existente no arquivo representa a senha `123456`, o qual utilizaremos par
       node-memsql-cluster-leaf-ag1-1     2/2     Running   0          54s
       node-memsql-cluster-master-0       2/2     Running   0          54s
 
-  A partir deste ponto já temos nosso cluster SingleStore configurado e funcionando, dessa forma já podemos iniciar os testes com querys SQL básicas.
+  A partir deste ponto já temos nosso cluster SingleStore configurado e funcionando, dessa forma já podemos iniciar os testes com *querys* SQL básicas.
 
 > Nota: Todos os arquivos .yaml acima também estão disponiveis na [documentação do SingleStore](https://docs.SingleStore.com/v7.3/guides/deploy-memsql/self-managed/kubernetes/step-3/).
 
 ### 4. Acessando o Cluster
 
-- Verificar os serviços criados no deploy
+- Verificar os serviços criados no *deploy*
 
   ```shell
   $ kubectl get pods
@@ -591,8 +591,8 @@ O hash existente no arquivo representa a senha `123456`, o qual utilizaremos par
       svc-memsql-cluster       ClusterIP      None           <none>          3306/TCP         3m16s
       svc-memsql-cluster-ddl   LoadBalancer   10.120.7.169   35.247.216.80   3306:32748/TCP   3m16s
 
-  Existem três serviços sendo executados em nosso cluster Kubernetes, contudo o que nos importa agora é o que possue o `TYPE` de `LoadBalancer`, chamado `svc-memsql-cluster-ddl`. 
-  Este serviço é responsável por encaminhar as requisições recebidas no seu IP externo para as pods do cluster, no caso, para os nós do nosso cluster. 
+  Existem três serviços sendo executados em nosso *cluster* Kubernetes, contudo o que nos importa agora é o que possue o `TYPE` de `LoadBalancer`, chamado `svc-memsql-cluster-ddl`. 
+  Este serviço é responsável por encaminhar as requisições recebidas no seu IP externo para as *pods* do *cluster*, no caso, para os nós do nosso *cluster*. 
 
   Analisando o retorno do último comando, temos que o `host` do nosso serviço de banco de dados é `35.247.216.80` e que a `porta` é a `3306`.
 
@@ -625,7 +625,7 @@ O hash existente no arquivo representa a senha `123456`, o qual utilizaremos par
 
       mysql>
 
-  Agora podemos executar nossos comandos SQL dentro do cluster.
+  Agora podemos executar nossos comandos SQL dentro do *cluster*.
 
 - Crie o banco de dados
 
@@ -644,12 +644,12 @@ Relembrando o objetivo da tolerância à falhas, ela impede que alguma mudança 
 
 Sabendo disso, vamos simular alguns casos para você perceber o este funcionamento, antes de simular uma falha do nó, vamos passar pelo conceito da replicação na prática.
 
-Diferentemente do cockroach, em que configuramos um cluster totalmente replicado, no SingleStore temos um cluster gerenciado pelo nó master e seus dados armazenados e particionados em seus nós folha. Dessa forma só devemos realizar as operações de dados no nosso nó master, e assim a partição será realizada nas folhas através dos nossos agregadores, assim qualquer consulta que é feita pelo nó master, é processados pelos nós folhas. Isso ficará mais claro na prática, que demostraremos abaixo.
+Diferentemente do cockroach, em que configuramos um *cluster* totalmente replicado, no SingleStore temos um cluster gerenciado pelo nó master e seus dados armazenados e particionados em seus nós folha. Dessa forma só devemos realizar as operações de dados no nosso nó master, e assim a partição será realizada nas folhas através dos nossos agregadores, assim qualquer consulta que é feita pelo nó master, é processados pelos nós folhas. Isso ficará mais claro na prática, que demostraremos abaixo.
 
 
 - Simulando a falha de um nó.
    
-  Após nos termos populado nosso banco pelo nosso nó master, nós vamos deletar o nosso nó master com o comando abaixo:
+  Após nos termos populado nosso banco pelo nosso nó *master*, nós vamos deletar o nosso nó master com o comando abaixo:
     
   ```shell
   $ kubectl delete pods node-memsql-cluster-master-0
@@ -658,7 +658,7 @@ Diferentemente do cockroach, em que configuramos um cluster totalmente replicado
 
       pod "node-memsql-cluster-master-0" deleted
 
-  Logo em seguida verifique o status das pods
+  Logo em seguida verifique o *status* das *pods*
 
   ```shell
   $ kubectl get pods
@@ -670,9 +670,9 @@ Diferentemente do cockroach, em que configuramos um cluster totalmente replicado
       node-memsql-cluster-leaf-ag1-1     2/2     Running       0          68m
       node-memsql-cluster-master-0       2/2     Terminating   0          40m
 
-  Quando deletamos o nó, o Operator do cluster irá reiniciar o nó automáticamente copiando as informações do nós folhas, ou seja, irá recriar o banco atraves das partições. 
+  Quando deletamos o nó, o *Operator* do *cluster* irá reiniciar o nó automáticamente copiando as informações do nós folhas, ou seja, irá recriar o banco atraves das partições. 
 
-  Se rodarmos esse comando no terminal, verificamos que a pod já foi reiniciada e esta com o **status: Running**. 
+  Se rodarmos esse comando no terminal, verificamos que a *pod* já foi reiniciada e esta com o  **status: Running** . 
 
   ```shell
   $ kubectl get pods
@@ -708,11 +708,11 @@ Diferentemente do cockroach, em que configuramos um cluster totalmente replicado
 #
 ### 6. Testes de escalabilidade
 
-O escalonamento do cluster será executado baseado no conceito de escalabilidade vertical. Este conceito representa o aumentar a capacidade dos recursos de uma mesma máquina. Em nosso contexto a escalabilidade vertical vai ser aplicada através da manipulação da quantidade de instâncias do banco de dados(pods).
+O escalonamento do *cluster* será executado baseado no conceito de escalabilidade vertical. Este conceito representa o aumentar a capacidade dos recursos de uma mesma máquina. Em nosso contexto a escalabilidade vertical vai ser aplicada através da manipulação da quantidade de instâncias do banco de dados(*pods*).
 
-<!-- Para o escalonamento do nosso cluster, utilizaremos a escalabilidade horizontal, que consiste em utilizar mais equipamentos e existe a partionalização dos dados de acordo com os critérios de cada projeto, diferente do vertical, que consiste em aumentar a capacidade da máquina, porém no horizontal também temos o aumento de capacidade de memória e de processamento, mas isso terá o impacto pela soma das máquinas em funcionamento.  -->
+<!-- Para o escalonamento do nosso *cluster*, utilizaremos a escalabilidade horizontal, que consiste em utilizar mais equipamentos e existe a partionalização dos dados de acordo com os critérios de cada projeto, diferente do vertical, que consiste em aumentar a capacidade da máquina, porém no horizontal também temos o aumento de capacidade de memória e de processamento, mas isso terá o impacto pela soma das máquinas em funcionamento.  -->
 
-Como fizemos o deploy do cluster SingleStore utilizando um Operator, toda escalabilidade será realizada modificando o arquivo de configuração do cluster e realizando seu deploy novamente.
+Como fizemos o *deploy* do *cluster* SingleStore utilizando um Operator, toda escalabilidade será realizada modificando o arquivo de configuração do *cluster* e realizando seu *deploy* novamente.
 
 Primeiramente precisamos abrir o arquivo `singlestore-cluster.yaml`, pois é neste que iremos realizar as configurações de escalabilidade.
 
@@ -753,17 +753,17 @@ Primeiramente precisamos abrir o arquivo `singlestore-cluster.yaml`, pois é nes
       labels:
         optional: label
 ```
-Este é o trecho de código que iremos modificar para podermos testar a escalabilidade do cluster. A seguir temos as opções disponíveis:
+Este é o trecho de código que iremos modificar para podermos testar a escalabilidade do *cluster*. A seguir temos as opções disponíveis:
 
 - Alta Disponibilidade:
   
-  No inicio temos o campo `redundancyLevel`, este é responsável por ativar a `Alta Disponibilidade`, que irá criar no mesmo cluster outro conjunto de nós agregadores que atuaram apenas como replicas do primeiro conjunto de nós. Neste tutorial não iremos abordar esta função, pois será necessário uma infraestrutura muito mais potente.
+  No inicio temos o campo `redundancyLevel`, este é responsável por ativar a `Alta Disponibilidade`, que irá criar no mesmo *cluster* outro conjunto de nós agregadores que atuaram apenas como replicas do primeiro conjunto de nós. Neste tutorial não iremos abordar esta função, pois será necessário uma infraestrutura muito mais potente.
 
-  > Nota: Quando o modo de Alta Disponibilidade está ativado, todos os nós do cluster são duplicados, assim como a solicitação de recursos.
+  > Nota: Quando o modo de Alta Disponibilidade está ativado, todos os nós do *cluster* são duplicados, assim como a solicitação de recursos.
 
-- Aumentando/Diminuindo o número de nós do cluster
+- Aumentando/Diminuindo o número de nós do *cluster*
 
-  Para podermos realizar o escalonamento horizontal de nosso cluster, precisamos adicionar mais nós para ele. Assim precisaremos apenas alterar os campos de `aggregatorSpec.count` e `leafSpec.count`, sendo a quantidade de nós do agregador(master) e de seus nós folha, respectivamente.
+  Para podermos realizar o escalonamento horizontal de nosso *cluster*, precisamos adicionar mais nós para ele. Assim precisaremos apenas alterar os campos de `aggregatorSpec.count` e `leafSpec.count`, sendo a quantidade de nós do agregador(master) e de seus nós folha, respectivamente.
 
 - Aumentando/Diminuindo o armazenamento dos nós
 
@@ -777,7 +777,7 @@ Este é o trecho de código que iremos modificar para podermos testar a escalabi
 
 - Aplicando as alterações
 
-  Para realizar o deploy do cluster com a nova configuração basta realizar o commando `apply` novamente.
+  Para realizar o *deploy* do *cluster* com a nova configuração basta realizar o commando `apply` novamente.
 
   ```shell
   $ kubectl apply -f singlestore/singlestore-cluster.yaml
@@ -788,11 +788,11 @@ Este é o trecho de código que iremos modificar para podermos testar a escalabi
 
 ## Benchmark
 
-Antes da escolha dos softawares que usariamos dentro deste projeto, nos realizamos um benchmark para escolher o que mais se encaixava, com isso nós levantamos algumas coisas que seriam essenciais que foram: uma boa documentação que contesse vídeos e bons exemplos, gratuitos ou até mesmo com um valor alto de créditos para testes iniciais e gostariamos que os softwares entre si tivessem alguma diferência significativa. 
+Antes da escolha dos softawares que usariamos dentro deste projeto, nos realizamos um *benchmark* para escolher o que mais se encaixava, com isso nós levantamos algumas coisas que seriam essenciais que foram: uma boa documentação que contesse vídeos e bons exemplos, gratuitos ou até mesmo com um valor alto de créditos para testes iniciais e gostariamos que os *softwares* entre si tivessem alguma diferência significativa. 
 
 Após esses critérios criados, nos escolhemos o cockroachdb e o single store(antigo MemSQL).
 
-O cockroachdb nos chamou atenção por ser um banco de dados open-source e possui em sua versão gratuita *Core*. O banco tem como objetivo rodar em um computador pessoal comum, ser consistente e escalável, mas ele não utiliza o armazenamento em memória principal, ele utiliza a estrutura de *clocks* atômicos e possui outras camadas de estrutura: *SQL Layer*, *Transaction Layer* (que garante as propriedades **ACID**), *Distribution Layer*, *Replication Layer* e *Storage Layer*. 
+O cockroachdb nos chamou atenção por ser um banco de dados *open-source* e possui em sua versão gratuita *Core*. O banco tem como objetivo rodar em um computador pessoal comum, ser consistente e escalável, mas ele não utiliza o armazenamento em memória principal, ele utiliza a estrutura de *clocks* atômicos e possui outras camadas de estrutura: *SQL Layer*, *Transaction Layer* (que garante as propriedades **ACID**), *Distribution Layer*, *Replication Layer* e *Storage Layer*. 
 
 Já o MemSQL já nos chamou atenção, pois diferente do cockroachdb, ele tem o armazenamento na memória principal e sua estrutura é composta em dois níveis: nós agregadores e nós folhas, porém ela contem algumas barreiras na questão gratuita, isso porque a versão *Developer* não é recomendada para ambientes de produção e possui algumas limitações de recursos, e também possui uma dependência de uma infraestrutura com grande poder de processamento. 
 
@@ -800,11 +800,11 @@ Já o MemSQL já nos chamou atenção, pois diferente do cockroachdb, ele tem o 
 
 ## Conclusão
 
-Quando iniciamos o projeto já sabiamos que ele seria desafiador, pois muito mais do que a prática envolvida teriamos que provar e exemplificar através dos testes os conceitos e definições tanto do NewSQL como também as particularidades de cada software, do kubernetes que escolhemos para nos auxiliar e o google cloud, que foi na nossa escolha tanto pela documentação que existe, quanto também com a quantidade de créditos que eles dão para o teste gratuito.
+Quando iniciamos o projeto já sabiamos que ele seria desafiador, pois muito mais do que a prática envolvida teriamos que provar e exemplificar através dos testes os conceitos e definições tanto do NewSQL como também as particularidades de cada *software*, do kubernetes que escolhemos para nos auxiliar e o *google cloud*, que foi na nossa escolha tanto pela documentação que existe, quanto também com a quantidade de créditos que eles dão para o teste gratuito.
 
-Durante o processo tivemos que realizar algumas escolhas, como por exemplo, deixar de simular de maneira local da nossa máquina e partir para o cloud, e com isso tivemos dificuldade com as configurações mínimas de hardware, em particularidade do SingleStore, antigo MemSQL, e assim os cenários que nós imaginavamos que seria o ideal para os testes acabou que teve que ser adaptado para conseguirmos entregar o projeto de acordo com as expectativas.
+Durante o processo tivemos que realizar algumas escolhas, como por exemplo, deixar de simular de maneira local da nossa máquina e partir para o *cloud*, e com isso tivemos dificuldade com as configurações mínimas de *hardware*, em particularidade do SingleStore, antigo MemSQL, e assim os cenários que nós imaginavamos que seria o ideal para os testes acabou que teve que ser adaptado para conseguirmos entregar o projeto de acordo com as expectativas.
 
-Com esse trabalho, por fim, finalizamos o projeto com grande aprendizado dos conceitos de tolerância à falhas e escalabilidade e também com um conceito mais básico e prático do funcionamento da cloud. 
+Com esse trabalho, por fim, finalizamos o projeto com grande aprendizado dos conceitos de tolerância à falhas e escalabilidade e também com um conceito mais básico e prático do funcionamento da *cloud*. 
 
 > Voltar ao: [Sumário](#sumário)
 
