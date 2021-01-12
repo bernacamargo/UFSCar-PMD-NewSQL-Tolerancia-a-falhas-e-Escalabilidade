@@ -35,10 +35,11 @@ Projeto desenvolvido na disciplina de Processamento Massivo de Dados na UFSCar S
   - [9.6. Testes de escalabilidade](#96-testes-de-escalabilidade)
 - [10. Benchmark](#10-benchmark)
 - [11. Conclusão](#11-conclusão)
+- [12. Referências](#12-referências)
    
 #
 ## 1. Objetivo
-No contexto de bancos de dados relacionais e distribuídos (NewSQL), temos como objetivo deste projeto planejar e elaborar um tutorial intuitivo que permita a qualquer pessoa interessada testar e validar as características relacionadas a tolerância às falhas e escalabilidade na estrutura de NewSQL.
+No contexto de bancos de dados relacionais e distribuídos, temos como objetivo deste projeto planejar e elaborar um tutorial intuitivo que permita a qualquer pessoa interessada testar e validar as características relacionadas a tolerância às falhas e escalabilidade na estrutura de NewSQL.
 
 > Voltar ao: [Sumário](#sumário)
 
@@ -76,7 +77,7 @@ Os arquivos para importação da estrutura das tabelas e seus dados estão na pa
 - [database/northwind-tables](https://raw.githubusercontent.com/bernacamargo/UFSCar-PMD-NewSQL-Tolerancia-a-falhas-e-Escalabilidade/main/database/northwind-tables.sql)
 - [database/northwind-data](https://raw.githubusercontent.com/bernacamargo/UFSCar-PMD-NewSQL-Tolerancia-a-falhas-e-Escalabilidade/main/database/northwind-data.sql)
 
-> Nota: Os dados foram obtidos no https://github.com/jpwhite3/northwind-MySQL
+> Nota: Os dados foram obtidos no https://github.com/jpwhite3/northwind-MySQL e https://github.com/pthom/northwind_psql/
 
 Utilizando esses dados iremos criar um cenário para executar os testes descritos abaixo:
 
@@ -99,11 +100,11 @@ Utilizando esses dados iremos criar um cenário para executar os testes descrito
 
 ## 4. Tecnologias habilitadoras
 
-- Kubernetes;
-- Docker;
-- Google Kubernetes Engine (GKE);
-- CockroachDB;
-- SingleStore;
+- [Kubernetes](#12-referências);
+- [Docker](#12-referências);
+- [Google Kubernetes Engine (GKE)](#12-referências);
+- [CockroachDB](#12-referências);
+- [SingleStore](#12-referências);
 
 > Voltar ao: [Sumário](#sumário)
 
@@ -183,14 +184,14 @@ Feito isso, um *cluster* com três nós será criado e inicializado. Em alguns m
 #
 ## 8. CockroachDB
 
-Antes de iniciar os testes, temos que configurar o CockroachDB no nosso *cluster* e para nos auxiliar utilizamos as documentações do CockroachDB e kubernetes, e citaremos abaixo os comandos que devem ser realizados.
+Antes de iniciar os testes, temos que configurar o CockroachDB no nosso *cluster* e para nos auxiliar utilizamos a documentações do [CockroachDB](#12-referências), [Kubernetes](#12-referências), e [Google Cloud](#12-referências). Abaixo citaremos os comandos que devem ser realizados.
 
 Para configurar a aplicação do CockroachDB dentro do *cluster* podemos fazer de algumas formas:
-- [Usando o Operator](https://kubernetes.io/pt/docs/concepts/extend-kubernetes/operator/)
-- [Usando o Helm](https://helm.sh/)
+- Usando o Operator
+- Usando o Helm
 - Usando arquivos de configurações sem ferramentas automatizadoras.
 
-Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele irá automatizar diversas configuração do *cluster*.
+Neste projeto utilizaremos o [Kubernetes Operator](#12-referências) fornecido pelo CockroachDB, pois ele irá automatizar diversas configuração do *cluster*.
 
 >Nota: É importante notar que temos um *cluster* kubernetes, composto de três instâncias de máquina virtual (1 *master* e 2 *workers*), onde as *pods* são alocadas e cada uma representa um nó do CockroachDB que está executando. Dessa forma quando falamos sobre os nós do CockroachDB estamos nos referindo as *pods* e quando falamos dos nós do *cluster* estamos falando das instâncias de máquina virtual do Kubernetes.
 
@@ -244,7 +245,7 @@ Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele ir�
 ### 8.2. Deploy do *cluster*
   
 - Abra o arquivo `cockroachdb-cluster.yaml` com um editor de texto
-- Esta etapa é opcional, porém extremamente recomendada em ambientes de produção. <br> Vamos configurar a quantidade de CPU e memoria para cada *pod* do *cluster*. Basta procurar no arquivo pelo código abaixo, descomentar as linhas e alterar os valores de `cpu` e `memory`, seguindo a regra de 4GB de memória RAM para cada um núcleo de CPU.
+- Vamos configurar a quantidade de CPU e memoria para cada *pod* do *cluster*. Basta procurar no arquivo pelo código abaixo, descomentar as linhas e alterar os valores de `cpu` e `memory`, seguindo a regra de 4GB de memória RAM para cada um núcleo de CPU.
 
   ```yaml
   resources:
@@ -256,6 +257,7 @@ Neste exemplo utilizaremos o `Operator` fornecido pelo CockroachDB, pois ele ir�
           cpu: "2"
           memory: "8Gi"
   ```
+  Esta etapa é opcional, porém extremamente [recomendada em ambientes de produção](#12-referências).
 
   > Nota: Caso não defina nenhum valor inicial a aplicação extendera seus limites de uso de cpu/memoria até o limite do nó do *cluster*. 
           
@@ -305,7 +307,7 @@ Feito isso, já temos nosso *cluster* e nossa aplicação configurados e executa
 
   > Nota: Para alterar qual pod voce está acessando basta alterar a parte do comando `cockroachdb-2` para o nome da pod que você deseja acessar.
 
-- Dentro da pod inicialize o [build-in SQL client](https://www.cockroachlabs.com/docs/v20.2/cockroach-sql) do *cockroach*
+- Dentro da pod inicialize o [built-in SQL client](#12-referências) do *cockroach*
 
   ```shell
   $ cockroach sql --certs-dir cockroach-certs
@@ -609,7 +611,7 @@ O hash existente no arquivo representa a senha `123456`, o qual utilizaremos par
 
   A partir deste ponto já temos nosso cluster SingleStore configurado e funcionando, dessa forma já podemos iniciar os testes com *querys* SQL básicas.
 
-> Nota: Todos os arquivos .yaml acima também estão disponiveis na [documentação do SingleStore](https://docs.SingleStore.com/v7.3/guides/deploy-memsql/self-managed/kubernetes/step-3/).
+> Nota: Todos os arquivos .yaml acima também estão disponiveis na [SingleStore: Deploy Kubernetes - Create the Object Definition Files](#12-referências).
 
 ### 9.4. Acessando o Cluster
 
@@ -818,12 +820,19 @@ Já o MemSQL já nos chamou atenção, pois diferente do cockroachdb, ele tem o 
 
 Agora vamos apresentar algumas comparações entre eles.
 
-Como no caso das operações das latências das operações de atualização, inserção e remoção retirado do benckmark dos autores[Karambir Kaur e Monika Sachdeva](https://ieeexplore.ieee.org/document/8068585)
+Como no caso das operações das latências das operações de atualização, inserção e remoção retirado do benckmark dos autores [Karambir Kaur e Monika Sachdeva](#12-referências)
 
 ![Tabela3: Retirada do Benckmark - Médias de parâmetro em segundos](https://i.ibb.co/WsNPftR/image.png)
+
+<center>
+  <sub>Figura 2: Benckmark - Médias de parâmetro em segundos</sub>
+</center>
+<br>
+
+
 >Nota: a tabela está com o nome antigo do SingleStore.
 
-Outra comparação entre eles importante para o nosso trabalho, foi o uso de recursos em que citamos no item [6. Requisitos mínimos](#6-requisitos-mínimos), retirados da documentação dos softwares.
+Outra comparação entre eles importante para o nosso trabalho, foi o uso de recursos em que citamos no item [Requisitos mínimos](#6-requisitos-mínimos), retirados da [documentação dos softwares](#12-referências).
 
 RECURSO | VALOR
   ------- | -------
@@ -863,3 +872,26 @@ Com esse trabalho, por fim, finalizamos o projeto com grande aprendizado dos con
 
 > Voltar ao: [Sumário](#sumário)
 
+## 12. Referências
+
+- COCKROACH LABS. [CockroachDB: Architecture Overview](https://www.cockroachlabs.com/docs/v20.1/architecture/). Cockroach Labs, 2020.
+- COCKROACH LABS. [CockroachDB: Orchestrate a Local Cluster with Kubernetes](https://www.cockroachlabs.com/docs/stable/orchestrate-a-local-cluster-with-kubernetes.html). Cockroach Labs, 2020.
+- COCKROACH LABS. [CockroachDB: Production Checklist](https://www.cockroachlabs.com/docs/stable/recommended-production-settings.html). Cockroach Labs, 2020.
+- COCKROACH LABS. [CockroachDB: Production Checklist - Orchestration / Kubernetes](https://www.cockroachlabs.com/docs/v20.2/recommended-production-settings.html#orchestration-kubernetes). Cockroach Labs, 2020.
+- COCKROACH LABS. [CockroachDB: Cockroach built-in SQL](https://www.cockroachlabs.com/docs/v20.2/cockroach-sql). Cockroach Labs, 2020.
+
+- KUBERNETES. [Kubernetes: Padrão Operador](https://kubernetes.io/pt/docs/concepts/extend-kubernetes/operator/). Kubernetes, 2020.
+- KUBERNETES. [Kubernetes: Documentation](https://kubernetes.io/docs/home/). Kubernetes, 2020.
+
+- DOCKER. [Docker: Documentations](https://docs.docker.com/).
+
+- GOOGLE. [Google Kubernetes Engine (GKE)](https://cloud.google.com/kubernetes-engine/). Google, 2020.
+
+- GITHUB. [pthom/northwind_psql](https://github.com/pthom/northwind_psql). Pascal Thomet, 2020.
+- GITHUB. [pwhite3/northwind-MySQL](https://github.com/jpwhite3/northwind-MySQL). JP White, 2020.
+
+- SINGLESTORE. [SingleStore: Documentation](https://docs.singlestore.com/v7.3/guides/overview/). SingleStore, 2020.
+- SINGLESTORE. [SingleStore: Deploy Kubernetes - Create the Object Definition Files](https://docs.SingleStore.com/v7.3/guides/deploy-memsql/self-managed/kubernetes/step-3/). SingleStore, 2020.
+- SINGLESTORE. [SingleStore: Learn how to manage a SingleStore DB cluster](https://docs.singlestore.com/v7.3/guides/cluster-management/). SingleStore, 2020.
+
+- IEEE XPLORE. [Performance evaluation of NewSQL databases](https://ieeexplore.ieee.org/document/8068585). Karambir Kaur; Monika Sachdeva, 2017.
