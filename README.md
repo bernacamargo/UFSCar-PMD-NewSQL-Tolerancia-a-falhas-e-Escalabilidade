@@ -831,6 +831,7 @@ RECURSO | VALOR
   CPU   | 2 núcleos de vCPU por nó
   Memória | No mínimo 4GB por núcleo de vCPU
   Armazenamento | Cada nó deve ter pelo menos 150GB por núcleo de vCPU
+
 <center>
   <sub>Tabela 1: Recomendações de configurações para o cluster CockroachDB</sub>
 </center>
