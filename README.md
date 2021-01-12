@@ -808,13 +808,47 @@ Este é o trecho de código que iremos modificar para podermos testar a escalabi
 
 ## 10. Benchmark
 
-Antes da escolha dos softwares que usariamos dentro deste projeto, nos realizamos um *benchmark* para escolher o que mais se encaixava, com isso nós levantamos algumas coisas que seriam essenciais que foram: uma boa documentação que contesse vídeos e bons exemplos, gratuitos ou até mesmo com um valor alto de créditos para testes iniciais e gostariamos que os *softwares* entre si tivessem alguma diferência significativa. 
+Antes da escolha dos softwares que usariamos dentro deste projeto, nos buscamos *benchmarks* para escolher o que mais se encaixava, com isso nós levantamos algumas coisas que seriam essenciais que foram: uma boa documentação que contesse vídeos e bons exemplos, gratuitos ou até mesmo com um valor alto de créditos para testes iniciais e gostariamos que os *softwares* entre si tivessem alguma diferência significativa. 
 
 Após esses critérios criados, nos escolhemos o cockroachdb e o single store(antigo MemSQL).
 
 O cockroachdb nos chamou atenção por ser um banco de dados *open-source* e possui em sua versão gratuita *Core*. O banco tem como objetivo rodar em um computador pessoal comum, ser consistente e escalável, mas ele não utiliza o armazenamento em memória principal, ele utiliza a estrutura de *clocks* atômicos e possui outras camadas de estrutura: *SQL Layer*, *Transaction Layer* (que garante as propriedades **ACID**), *Distribution Layer*, *Replication Layer* e *Storage Layer*. 
 
 Já o MemSQL já nos chamou atenção, pois diferente do cockroachdb, ele tem o armazenamento na memória principal e sua estrutura é composta em dois níveis: nós agregadores e nós folhas, porém ela contem algumas barreiras na questão gratuita, isso porque a versão *Developer* não é recomendada para ambientes de produção e possui algumas limitações de recursos, e também possui uma dependência de uma infraestrutura com grande poder de processamento. 
+
+Agora vamos apresentar algumas comparações entre eles.
+
+Como no caso das operações das latências das operações de atualização, inserção e remoção retirado do benckmark dos autores[Karambir Kaur e Monika Sachdeva](https://ieeexplore.ieee.org/document/8068585)
+
+![Tabela3: Retirada do Benckmark - Médias de parâmetro em segundos](https://i.ibb.co/WsNPftR/image.png)
+>Nota: a tabela está com o nome antigo do SingleStore.
+
+Outra comparação entre eles importante para o nosso trabalho, foi o uso de recursos em que citamos no item [6. Requisitos mínimos](#6-requisitos-mínimos), retirados da documentação dos softwares.
+
+RECURSO | VALOR
+  ------- | -------
+  Nós do cluster | 3
+  CPU   | 2 núcleos de vCPU por nó
+  Memória | No mínimo 4GB por núcleo de vCPU
+  Armazenamento | Cada nó deve ter pelo menos 150GB por núcleo de vCPU
+<center>
+  <sub>Tabela 1: Recomendações de configurações para o cluster CockroachDB</sub>
+</center>
+
+
+  RECURSO | VALOR
+  ------- | -------
+  Nós do cluster | 3
+  CPU   | 4 núcleos de vCPU por nó
+  Memória | No mínimo 4GB por núcleo de vCPU
+  Armazenamento | Pelo menos 3 vezes a quantidade de memória RAM
+  
+<center>
+  <sub>Tabela 2: Recomendações de configurações para o cluster SingleStore</sub>
+</center>
+<br>
+
+Como podemos observar nas tabelas acima, o SinglStore necessita do dobro de CPU e também muito mais armazenamento, o que é uma diferença bem grande, tanto para casos pequenos mas pricipalmente em maiores escalas.
 
 > Voltar ao: [Sumário](#sumário)
 
