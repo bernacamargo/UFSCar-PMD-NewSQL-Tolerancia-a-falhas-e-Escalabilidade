@@ -860,6 +860,9 @@ RECURSO | VALOR
 
 Como podemos observar nas tabelas acima, o SingleStore necessita do dobro de CPU e também muito mais armazenamento, o que é uma diferença bem grande, tanto para casos pequenos mas pricipalmente em maiores escalas.
 
+
+Outro benckmark [Kiswono Prayogo](http://kokizzu.blogspot.com/2019/04/huge-list-of-database-benchmark.html) possui um gráfico interativo, no qual não conseguimos colocar dentro deste README, então acesse para conseguir visualizar e interagir. Nele é abordado quanto tempo demora para realizar algumas operações, como por exemplo *Create/item*, *Read/item*,*Update/item* e outros. 
+
 > Voltar ao: [Sumário](#sumário)
 
 ## 11. Conclusão
