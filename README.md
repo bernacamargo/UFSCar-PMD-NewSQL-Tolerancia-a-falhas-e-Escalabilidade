@@ -895,3 +895,5 @@ Com esse trabalho, por fim, finalizamos o projeto com grande aprendizado dos con
 - SINGLESTORE. [SingleStore: Learn how to manage a SingleStore DB cluster](https://docs.singlestore.com/v7.3/guides/cluster-management/). SingleStore, 2020.
 
 - IEEE XPLORE. [Performance evaluation of NewSQL databases](https://ieeexplore.ieee.org/document/8068585). Karambir Kaur; Monika Sachdeva, 2017.
+
+- Kiswono Prayogo . [Huge List of Database Benchmark](http://kokizzu.blogspot.com/2019/04/huge-list-of-database-benchmark.html)
