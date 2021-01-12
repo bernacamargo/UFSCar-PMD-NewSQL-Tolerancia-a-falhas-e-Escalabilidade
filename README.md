@@ -44,7 +44,9 @@ No contexto de bancos de dados relacionais e distribuídos (NewSQL), temos como 
 
 ## 2. Introdução
 
-O NewSQL surgiu como uma nova proposta, pois com o uso do NOSQL acabou apresentando alguns problemas como por exemplo: a falta, do uso de transações, das consultas SQL e a estrutura complexa por não ter uma modelagem estruturada. Ele veio com o objetivo de ter os os pontos positivos dos do modelo relacional para as arquiteturas distribuídas e aumentar o desempenhos das queries de SQL, não tendo a necessidade de servidores mais potentes para melhor execução, e utilizando a escalabilidade vertical e mantendo as propriedades ACID(Atomicidade, Consistência, Isolamento e Durabilidade).
+Inicialmente, nos trabalhavamos apenas com os bancos relacionais, que foram criados na decada de 70 e ainda utilizamos atualmente, mas para alguns casos, isso porque hoje nos temos uma variedade de cenários em que perceberam que existia a necessidade de outra forma de estrutura e organização, já que hoje na era da web 3.0 temos que processar muitos dados, e para isso foi criado o NoSQL, que permitem uma escalabilidade mais barata e menos trabalhosa, além de ter um processamento muito maior já que realiza o processamento paralelo e para adapatar ainda mais a cenários existentes no mercado, foi criado o paradigma NewSQL.
+
+O paradigma NewSQL surgiu como uma nova proposta, pois com o uso do NOSQL acabou apresentando alguns problemas como por exemplo: a falta, do uso de transações, das consultas SQL e a estrutura complexa por não ter uma modelagem estruturada. Ele veio com o objetivo de ter os os pontos positivos dos do modelo relacional para as arquiteturas distribuídas e aumentar o desempenhos das queries de SQL, não tendo a necessidade de servidores mais potentes para melhor execução, e utilizando a escalabilidade vertical e mantendo as propriedades ACID(Atomicidade, Consistência, Isolamento e Durabilidade).
 
 > Voltar ao: [Sumário](#sumário)
 
