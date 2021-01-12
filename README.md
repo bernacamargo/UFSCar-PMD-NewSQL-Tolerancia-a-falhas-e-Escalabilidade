@@ -858,7 +858,7 @@ RECURSO | VALOR
 </center>
 <br>
 
-Como podemos observar nas tabelas acima, o SinglStore necessita do dobro de CPU e também muito mais armazenamento, o que é uma diferença bem grande, tanto para casos pequenos mas pricipalmente em maiores escalas.
+Como podemos observar nas tabelas acima, o SingleStore necessita do dobro de CPU e também muito mais armazenamento, o que é uma diferença bem grande, tanto para casos pequenos mas pricipalmente em maiores escalas.
 
 > Voltar ao: [Sumário](#sumário)
 
